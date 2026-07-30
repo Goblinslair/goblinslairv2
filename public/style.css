@@ -683,8 +683,8 @@ footer .footer-links a:hover{ color: var(--brass); }
 .hero{ min-height: 92vh; }
 
 .hero-slide{
-  /* JS sets --parallax-y as the element scrolls; scale keeps edges covered */
-  transform: translateY(var(--parallax-y, 0)) scale(1.15);
+  /* JS sets --parallax-y based on position in the viewport; scale keeps edges covered */
+  transform: translateY(var(--parallax-y, 0)) scale(1.25);
   will-change: transform;
 }
 
@@ -772,7 +772,7 @@ footer .footer-links a:hover{ color: var(--brass); }
 .diamond{
   width: 150px;
   height: 150px;
-  transform: rotate(45deg);
+  transform: translateY(var(--parallax-y, 0)) rotate(45deg);
   border: 3px solid var(--brass);
   box-shadow: 0 18px 30px rgba(0,0,0,0.35);
   background:
@@ -827,6 +827,8 @@ footer .footer-links a:hover{ color: var(--brass); }
   background:
     radial-gradient(circle at 30% 20%, rgba(166,124,61,0.22), transparent 55%),
     linear-gradient(150deg, var(--maroon-deep), #250600);
+  transform: translateY(var(--parallax-y, 0));
+  will-change: transform;
 }
 
 .events-feature-card{

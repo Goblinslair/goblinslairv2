@@ -45,30 +45,4 @@
   root.addEventListener('mouseleave', startAutoplay);
 
   startAutoplay();
-
-  // ---------- Parallax ----------
-  // As the page scrolls, shift the hero background slower than the scroll
-  // itself. Bound to .hero's own overflow:hidden box, so it never leaks
-  // outside the hero section. Skipped for users who've asked for reduced motion.
-  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (slidesWrap && !prefersReducedMotion) {
-    var PARALLAX_FACTOR = 0.35;
-    var ticking = false;
-
-    function updateParallax() {
-      var offset = window.scrollY * PARALLAX_FACTOR;
-      slidesWrap.style.setProperty('--parallax-y', offset + 'px');
-      ticking = false;
-    }
-
-    window.addEventListener('scroll', function () {
-      if (!ticking) {
-        window.requestAnimationFrame(updateParallax);
-        ticking = true;
-      }
-    }, { passive: true });
-
-    updateParallax();
-  }
 })();
