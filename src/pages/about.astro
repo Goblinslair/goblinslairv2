@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="About Us — Goblin's Lair">
+
+  <div class="page-header">
+    <div class="hero-eyebrow">Who We Are</div>
+    <h1>About Goblin's Lair</h1>
+    <p>A hobby shop built by people who'd rather be at the painting table than anywhere else.</p>
+  </div>
+
+  <section class="about" style="padding-bottom: 0;">
+    <div class="about-inner">
+      <div class="about-art"><div class="seal">GL</div></div>
+      <div class="about-copy">
+        <div class="section-eyebrow">Our Story</div>
+        <h2>From One Folding Table to a Full Battlefield</h2>
+        <p>Goblin's Lair started with a single paint rack in the corner of a friend's game store and a Saturday group that outgrew its table. We opened our own doors so that group would always have somewhere to go.</p>
+        <p>Today we carry full ranges for Warhammer 40,000 and Age of Sigmar, alongside the paints, tools, and terrain to finish what you start. Every person behind the counter plays — so if you've got a question about a list, a paint scheme, or a rule, someone here has already argued about it.</p>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><b>7</b><span>Years Open</span></div>
+      <div class="stat"><b>2</b><span>Game Systems Stocked</span></div>
+      <div class="stat"><b>6</b><span>Painting Tables</span></div>
+      <div class="stat"><b>200+</b><span>Saturday Regulars</span></div>
+    </div>
+  </section>
+
+  <div class="torn">
+    <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
+      <path d="M0,0 L1200,0 L1200,20 L1180,8 L1150,24 L1120,6 L1090,22 L1060,10 L1030,26 L1000,8 L970,20 L940,4 L910,24 L880,10 L850,22 L820,6 L790,26 L760,12 L730,20 L700,6 L670,24 L640,10 L610,22 L580,4 L550,20 L520,8 L490,24 L460,10 L430,22 L400,6 L370,26 L340,12 L310,20 L280,6 L250,24 L220,10 L190,22 L160,4 L130,20 L100,8 L70,24 L40,10 L10,22 L0,10 Z" fill="var(--maroon)"/>
+    </svg>
+  </div>
+
+  <section class="products">
+    <div class="section-head">
+      <div class="section-eyebrow">Meet the Keepers</div>
+      <h2>The People Behind the Counter</h2>
+      <p>Every keeper has a home faction — and strong opinions about yours.</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-photo"></div>
+        <h3>Mara Voss</h3>
+        <span>Founder &amp; 40K Lead</span>
+        <p>Runs the Saturday league and paints faster than anyone should be able to.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-photo"></div>
+        <h3>Devlin Ash</h3>
+        <span>Age of Sigmar Buyer</span>
+        <p>Handles the AoS range and can recite every battletome from memory.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-photo"></div>
+        <h3>Toma Reyes</h3>
+        <span>Hobby &amp; Terrain</span>
+        <p>Builds the in-store terrain and teaches our weekend painting classes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" style="padding-top: 80px;">
+    <div class="section-eyebrow">Visit the Lair</div>
+    <h2>Come Play a Game</h2>
+    <p class="lead">Six tables, always open for a pickup game or a painting session.</p>
+    <a href="/contact" class="btn btn-primary">Get Directions</a>
+  </section>
+
+</BaseLayout>

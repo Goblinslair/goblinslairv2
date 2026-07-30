@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog');
+const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const [featured, ...rest] = posts;
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+---
+<BaseLayout title="Blog — Goblin's Lair">
+
+  <div class="page-header">
+    <div class="hero-eyebrow">Dispatches</div>
+    <h1>The Lair Blog</h1>
+    <p>Painting guides, restock notes, and results from our Saturday tables.</p>
+  </div>
+
+  <section class="blog">
+    {featured && (
+      <div class="blog-feature">
+        <div class="blog-feature-img"></div>
+        <div class="blog-feature-body">
+          <span class="blog-date">{formatDate(featured.data.date)}</span>
+          <h2 style="font-size:1.6rem; margin-bottom:14px;">{featured.data.title}</h2>
+          <p style="color: rgba(42,26,18,0.7); margin-bottom:18px;">{featured.data.excerpt}</p>
+          <a href={`/blog/${featured.slug}`} class="blog-link">Read the Full Story</a>
+        </div>
+      </div>
+    )}
+
+    <div class="blog-grid">
+      {rest.map((post) => (
+        <div class="blog-card">
+          <div class="blog-thumb"></div>
+          <span class="blog-date">{formatDate(post.data.date)}</span>
+          <h3>{post.data.title}</h3>
+          <p>{post.data.excerpt}</p>
+          <a href={`/blog/${post.slug}`} class="blog-link">Read More</a>
+        </div>
+      ))}
+    </div>
+  </section>
+
+</BaseLayout>

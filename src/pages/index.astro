@@ -1,0 +1,206 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Goblin's Lair — Warhammer &amp; Tabletop Hobby Shop">
+
+  <!-- HERO -->
+  <section class="hero" id="hero-slideshow">
+    <!-- Swap the background-image url() for real photography whenever it's ready.
+         The gradient is a placeholder fallback so it still looks intentional
+         until then. -->
+    <div class="hero-slides">
+      <div class="hero-slide is-active" style="background-image:url('/images/hero-1.jpg');"></div>
+      <div class="hero-slide" style="background-image:url('/images/hero-2.jpg');"></div>
+      <div class="hero-slide" style="background-image:url('/images/hero-3.jpg');"></div>
+    </div>
+    <div class="hero-frame-vignette"></div>
+
+    <button class="hero-arrow hero-arrow-left" type="button" aria-label="Previous slide">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <button class="hero-arrow hero-arrow-right" type="button" aria-label="Next slide">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">Let Us Help You Build</div>
+      <h1>Your Army Starts<br>in the Lair</h1>
+      <p>Miniatures, paints, terrain, and rulebooks for Warhammer 40,000 and Age of Sigmar — stocked, painted, and battle-tested by people who actually play.</p>
+      <a href="/products" class="btn btn-primary">Shop the Range</a>
+      <a href="/about" class="btn btn-outline" style="margin-left:16px;">Our Story</a>
+    </div>
+
+    <div class="hero-dots">
+      <button class="hero-dot is-active" type="button" aria-label="Go to slide 1"></button>
+      <button class="hero-dot" type="button" aria-label="Go to slide 2"></button>
+      <button class="hero-dot" type="button" aria-label="Go to slide 3"></button>
+    </div>
+
+    <div class="hero-scrollcue">
+      <span>Enter the Lair</span>
+      <i></i>
+    </div>
+  </section>
+
+  <!-- REASONS -->
+  <section class="reasons">
+    <div class="watermark"></div>
+    <div class="section-head">
+      <div class="section-eyebrow">Reasons</div>
+      <h2>Why Hobbyists Choose<br>the Lair</h2>
+      <p>Five reasons our regulars keep coming back, table after table.</p>
+    </div>
+
+    <div class="reasons-collage">
+
+      <div class="reason-row">
+        <div class="diamond-wrap"><div class="diamond"></div></div>
+        <div class="reason-text">
+          <span class="reason-num">01</span>
+          <h3>A Table Always Open</h3>
+          <p>Six painting and gaming tables, free to use whenever the shop is open — no booking required.</p>
+        </div>
+      </div>
+
+      <div class="reason-row is-reverse">
+        <div class="diamond-wrap"><div class="diamond"></div></div>
+        <div class="reason-text">
+          <span class="reason-num">02</span>
+          <h3>Full Range, Always Stocked</h3>
+          <p>Deep stock across both Warhammer 40,000 and Age of Sigmar, restocked weekly so you're never waiting on a backorder.</p>
+        </div>
+      </div>
+
+      <div class="reason-row">
+        <div class="diamond-wrap"><div class="diamond"></div></div>
+        <div class="reason-text">
+          <span class="reason-num">03</span>
+          <h3>Advice From People Who Play</h3>
+          <p>Every keeper behind the counter runs their own army — ask a rules question and you'll get a real answer.</p>
+        </div>
+      </div>
+
+      <div class="reason-row is-reverse">
+        <div class="diamond-wrap"><div class="diamond"></div></div>
+        <div class="reason-text">
+          <span class="reason-num">04</span>
+          <h3>Something On Most Weekends</h3>
+          <p>Painting workshops, narrative campaigns, and new release nights — check the events list below for what's next.</p>
+        </div>
+      </div>
+
+      <div class="reason-row">
+        <div class="diamond-wrap"><div class="diamond"></div></div>
+        <div class="reason-text">
+          <span class="reason-num">05</span>
+          <h3>A Genuine Community</h3>
+          <p>200+ regulars deep and still growing — first-timers get paired with someone happy to show them the ropes.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align:center; margin-top: 20px;">
+      <a href="/about" class="btn btn-outline">Meet the Keepers</a>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="events">
+    <div class="watermark"></div>
+    <div class="events-layout">
+
+      <div class="events-image">
+        <div class="events-feature-card">
+          <div class="efc-info">
+            <span>Featured &middot; Aug 08</span>
+            <strong>Saturday Narrative Campaign — Round 4</strong>
+          </div>
+          <a href="/blog" class="btn">Reserve Spot</a>
+        </div>
+      </div>
+
+      <div class="events-list">
+        <div class="section-head">
+          <div class="section-eyebrow">Events</div>
+          <h2>What's On at the Lair</h2>
+        </div>
+
+        <div class="event-row is-featured">
+          <span class="event-date">08 / 08</span>
+          <div class="event-info">
+            <h3>Saturday Narrative Campaign — Round 4</h3>
+            <p>Open to all skill levels. Lists due by Thursday.</p>
+          </div>
+          <a href="/blog" class="event-link">View Details</a>
+        </div>
+
+        <div class="event-row">
+          <span class="event-date">15 / 08</span>
+          <div class="event-info">
+            <h3>New Release Night: Battletome Launch</h3>
+            <p>First look at the latest Age of Sigmar release.</p>
+          </div>
+          <a href="/blog" class="event-link">View Details</a>
+        </div>
+
+        <div class="event-row">
+          <span class="event-date">22 / 08</span>
+          <div class="event-info">
+            <h3>Beginner Painting Workshop</h3>
+            <p>Basecoats to washes — bring any kit, we supply paint.</p>
+          </div>
+          <a href="/blog" class="event-link">View Details</a>
+        </div>
+
+        <div class="event-row">
+          <span class="event-date">29 / 08</span>
+          <div class="event-info">
+            <h3>Combat Patrol Escalation Night</h3>
+            <p>Start small, grow your force over four weeks.</p>
+          </div>
+          <a href="/blog" class="event-link">View Details</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FACTION INTRO -->
+  <section class="products">
+    <div class="section-head">
+      <div class="section-eyebrow">Two Armies, One Lair</div>
+      <h2>Grimdark Sci-Fi. Dark Fantasy.</h2>
+      <p>Whichever tabletop you're building for, we've got the range covered.</p>
+    </div>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img faction-40k"><div class="product-tag">40K</div></div>
+        <div class="product-body">
+          <h3>Warhammer 40,000</h3>
+          <p>Infantry squads, war machines, and full battleforce boxes for the grim darkness of the far future.</p>
+          <a href="/products" class="blog-link" style="margin-top:12px; display:inline-block;">Shop 40K &rarr;</a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img faction-aos"><div class="product-tag">AoS</div></div>
+        <div class="product-body">
+          <h3>Age of Sigmar</h3>
+          <p>Realmforged heroes, monsters, and battletomes for the mortal realms.</p>
+          <a href="/products" class="blog-link" style="margin-top:12px; display:inline-block;">Shop AoS &rarr;</a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img"><div class="product-tag">Hobby</div></div>
+        <div class="product-body">
+          <h3>Paints &amp; Tools</h3>
+          <p>Full paint racks, brushes, bases, and terrain-building supplies to finish the job.</p>
+          <a href="/products" class="blog-link" style="margin-top:12px; display:inline-block;">Shop Hobby &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<script src="/hero-slideshow.js" is:inline></script>

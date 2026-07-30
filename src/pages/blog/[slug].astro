@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+---
+<BaseLayout title={`${post.data.title} — Goblin's Lair`} description={post.data.excerpt}>
+
+  <div class="page-header">
+    <div class="hero-eyebrow">Dispatch &middot; {formatDate(post.data.date)}</div>
+    <h1>{post.data.title}</h1>
+  </div>
+
+  <section class="blog">
+    <article class="blog-post-body">
+      <Content />
+    </article>
+    <p style="text-align:center; margin-top:40px;">
+      <a href="/blog" class="blog-link">&larr; Back to All Posts</a>
+    </p>
+  </section>
+
+</BaseLayout>

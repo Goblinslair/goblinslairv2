@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Contact Us — Goblin's Lair">
+
+  <div class="page-header">
+    <div class="hero-eyebrow">Send a Raven</div>
+    <h1>Contact Us</h1>
+    <p>Questions, custom orders, or table bookings — the Lair always answers.</p>
+  </div>
+
+  <section class="contact">
+    <div class="contact-layout">
+      <form class="contact-form">
+        <div>
+          <label for="name">Name</label>
+          <input type="text" id="name" placeholder="Your name">
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="you@example.com">
+        </div>
+        <div>
+          <label for="topic">Topic</label>
+          <select id="topic">
+            <option>General Question</option>
+            <option>Custom Order</option>
+            <option>Painting Commission</option>
+            <option>Table Booking</option>
+          </select>
+        </div>
+        <div>
+          <label for="message">Message</label>
+          <textarea id="message" placeholder="What can we find for you?"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="justify-self:start;">Send Message</button>
+      </form>
+
+      <div class="contact-info">
+        <div class="contact-info-block">
+          <strong>Email</strong>
+          <p>hello@goblinslair.shop</p>
+        </div>
+        <div class="contact-info-block">
+          <strong>Hours</strong>
+          <p>Tue–Sun, 11am–7pm<br>Closed Mondays</p>
+        </div>
+        <div class="contact-info-block">
+          <strong>Location</strong>
+          <p>The Old Hollow Market<br>Unit 4, Petaling Jaya</p>
+        </div>
+        <div class="contact-map"></div>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
