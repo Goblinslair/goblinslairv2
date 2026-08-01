@@ -734,7 +734,7 @@ footer .footer-links a:hover{ color: var(--brass); }
 .reasons{
   position: relative;
   overflow: hidden;
-  background: var(--maroon);
+  background: var(--maroon-deep);
 }
 .reasons .watermark{ top: 60px; right: -160px; }
 
