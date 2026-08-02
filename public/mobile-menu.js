@@ -1,6 +1,7 @@
 (function () {
   var toggle = document.querySelector('.hamburger');
   var menu = document.getElementById('mobile-menu');
+  var closeBtn = document.querySelector('.mobile-menu-close');
   if (!toggle || !menu) return;
 
   var menuLinks = menu.querySelectorAll('a');
@@ -27,6 +28,17 @@
     } else {
       openMenu();
     }
+  });
+
+  // Dedicated close (×) button, always reliably visible/clickable
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeMenu);
+  }
+
+  // Clicking the dark backdrop itself (not a link, not the menu content)
+  // also closes it — a common expectation for full-screen overlay menus
+  menu.addEventListener('click', function (e) {
+    if (e.target === menu) closeMenu();
   });
 
   // Tapping a link should navigate AND close the menu behind it
