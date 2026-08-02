@@ -824,9 +824,11 @@ footer .footer-links a:hover{ color: var(--brass); }
 .reasons{
   position: relative;
   overflow: hidden;
-  background: var(--maroon-deep);
+  background: var(--cream);
 }
 .reasons .watermark{ top: 60px; right: -160px; }
+.reasons .section-head h2{ color: var(--maroon); }
+.reasons .section-head p{ color: #000; }
 
 .reasons-collage{
   position: relative;
@@ -902,8 +904,8 @@ footer .footer-links a:hover{ color: var(--brass); }
   display: block;
   margin-bottom: 10px;
 }
-.reason-text h3{ font-size: 1.2rem; margin-bottom: 10px; }
-.reason-text p{ color: rgba(236,234,215,0.72); font-size: 0.95rem; }
+.reason-text h3{ font-size: 1.2rem; margin-bottom: 10px; color: var(--maroon); }
+.reason-text p{ color: #000; font-size: 0.95rem; }
 
 @media (max-width: 760px){
   .reason-row{ grid-template-columns: 1fr; text-align: center !important; gap: 20px; }
@@ -917,9 +919,11 @@ footer .footer-links a:hover{ color: var(--brass); }
 .events{
   position: relative;
   overflow: hidden;
-  background: var(--maroon);
+  background: var(--cream-soft);
 }
 .events .watermark{ bottom: -120px; left: -160px; }
+.events .section-head h2{ color: var(--maroon); }
+.events .section-head p{ color: #000; }
 
 .events-layout{
   position: relative;
@@ -993,11 +997,11 @@ footer .footer-links a:hover{ color: var(--brass); }
   align-items: center;
   gap: 24px;
   padding: 22px 18px;
-  border-bottom: 1px solid rgba(236,234,215,0.14);
+  border-bottom: 1px solid rgba(42,26,18,0.14);
   transition: background 0.2s ease;
 }
 .event-row.is-featured{ background: rgba(166,124,61,0.12); }
-.event-row:hover{ background: rgba(236,234,215,0.05); }
+.event-row:hover{ background: rgba(42,26,18,0.05); }
 
 .event-date{
   font-family: 'Althea', serif;
@@ -1005,8 +1009,8 @@ footer .footer-links a:hover{ color: var(--brass); }
   color: var(--brass);
   letter-spacing: 0.04em;
 }
-.event-info h3{ font-size: 1.02rem; margin-bottom: 4px; }
-.event-info p{ font-size: 0.86rem; color: rgba(236,234,215,0.65); }
+.event-info h3{ font-size: 1.02rem; margin-bottom: 4px; color: var(--maroon); }
+.event-info p{ font-size: 0.86rem; color: #000; }
 .event-link{
   font-family: 'Althea', serif;
   font-size: 0.7rem;
