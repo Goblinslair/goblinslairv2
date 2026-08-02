@@ -40,8 +40,24 @@ function isActive(href: string) {
           <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
         </ul>
       </nav>
+      <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </header>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="seal">GL</div>
+    <ul>
+      <li><a href="/" class={isActive('/') ? 'active' : ''}>Home</a></li>
+      <li><a href="/products" class={isActive('/products') ? 'active' : ''}>Products</a></li>
+      <li><a href="/about" class={isActive('/about') ? 'active' : ''}>About Us</a></li>
+      <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>
+      <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
+    </ul>
+  </div>
 
   <slot />
 
@@ -57,5 +73,6 @@ function isActive(href: string) {
     <p>&copy; 2026 Goblin's Lair. All armies reserved.</p>
   </footer>
 
+  <script src="/mobile-menu.js" is:inline></script>
 </body>
 </html>
