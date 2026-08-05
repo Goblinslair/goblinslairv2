@@ -7,6 +7,9 @@ npm run dev
 ```
 Then open the local URL it prints (usually http://localhost:4321).
 
+To check a production build locally, run `npm run build` followed by
+`npm run preview`, which serves the generated `dist/` folder.
+
 ## Adding a new blog post
 Add a new `.md` file to `src/content/blog/` with this frontmatter, then write
 the post body underneath in plain Markdown:
