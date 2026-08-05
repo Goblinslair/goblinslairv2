@@ -1,6 +1,7 @@
 # Goblin's Lair — Astro Site
 
 ## Local setup
+Astro 5 requires Node 18.20.8+, 20.3+, or 22+.
 ```
 npm install
 npm run dev
