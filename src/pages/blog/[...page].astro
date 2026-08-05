@@ -1,10 +1,17 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import type { GetStaticPathsOptions } from 'astro';
 
-const allPosts = await getCollection('blog');
-const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const [featured, ...rest] = posts;
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const allPosts = await getCollection('blog');
+  const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  return paginate(posts, { pageSize: 9 });
+}
+
+const { page } = Astro.props;
+const isFirstPage = page.currentPage === 1;
+const [featured, ...rest] = isFirstPage ? page.data : [undefined, ...page.data];
 
 function formatDate(d: Date) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -42,6 +49,22 @@ function formatDate(d: Date) {
         </div>
       ))}
     </div>
+
+    {page.lastPage > 1 && (
+      <nav class="pagination">
+        {page.url.prev ? (
+          <a href={page.url.prev} class="pagination-link">&larr; Newer</a>
+        ) : (
+          <span class="pagination-link is-disabled">&larr; Newer</span>
+        )}
+        <span class="pagination-status">Page {page.currentPage} of {page.lastPage}</span>
+        {page.url.next ? (
+          <a href={page.url.next} class="pagination-link">Older &rarr;</a>
+        ) : (
+          <span class="pagination-link is-disabled">Older &rarr;</span>
+        )}
+      </nav>
+    )}
   </section>
 
 </BaseLayout>
