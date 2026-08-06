@@ -36,9 +36,11 @@ async function backgroundStyle(basename: string, width: number) {
   return `background-image:url('${optimized.src}');`;
 }
 
-const heroSlides = await Promise.all(
-  [1, 2, 3].map((n) => backgroundStyle(`hero-${n}`, 1920)),
-);
+// Slides are dropped where a numbered file is missing, so the slideshow only
+// ever renders photos that actually exist rather than blank panes.
+const heroSlides = (
+  await Promise.all([1, 2, 3, 4, 5].map((n) => backgroundStyle(`hero-${n}`, 1920)))
+).filter((style): style is string => style !== undefined);
 const reasonDiamonds = await Promise.all(
   [1, 2, 3, 4, 5].map((n) => backgroundStyle(`reason-${n}`, 600)),
 );
@@ -47,9 +49,9 @@ const reasonDiamonds = await Promise.all(
 
   <!-- HERO -->
   <section class="hero" id="hero-slideshow">
-    <!-- Slides come from src/assets/images/hero-1, hero-2, hero-3. Extend the
-         list in the frontmatter to add more, and add a matching .hero-dot
-         below — the slideshow script counts whatever markup it finds. -->
+    <!-- Slides come from src/assets/images/hero-N. Extend the list in the
+         frontmatter to add more; the dots below and the slideshow script both
+         follow whatever gets rendered here. -->
     <div class="hero-slides" data-parallax="0.12">
       {heroSlides.map((style, i) => (
         <div class={i === 0 ? 'hero-slide is-active' : 'hero-slide'} style={style}></div>
@@ -73,9 +75,13 @@ const reasonDiamonds = await Promise.all(
     </div>
 
     <div class="hero-dots">
-      <button class="hero-dot is-active" type="button" aria-label="Go to slide 1"></button>
-      <button class="hero-dot" type="button" aria-label="Go to slide 2"></button>
-      <button class="hero-dot" type="button" aria-label="Go to slide 3"></button>
+      {heroSlides.map((_, i) => (
+        <button
+          class={i === 0 ? 'hero-dot is-active' : 'hero-dot'}
+          type="button"
+          aria-label={`Go to slide ${i + 1}`}
+        ></button>
+      ))}
     </div>
 
     <div class="hero-scrollcue">

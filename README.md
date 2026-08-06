@@ -40,7 +40,7 @@ to `/blog/2`, `/blog/3`, and so on as new ones are added.
 Drop files into `src/assets/images/` using these names — `.jpg`, `.jpeg`, and
 `.png` all work:
 
-- `hero-1`, `hero-2`, `hero-3` — the homepage slideshow
+- `hero-1` through `hero-5` — the homepage slideshow
 - `reason-1` through `reason-5` — the diamond photos in the Reasons section
 
 They replace the placeholder gradients automatically; a name with no matching
