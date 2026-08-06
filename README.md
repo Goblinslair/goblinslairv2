@@ -37,7 +37,21 @@ to `/blog/2`, `/blog/3`, and so on as new ones are added.
   of `dist/` to any web server, same as any static site.
 
 ## Adding real photography
-Hero slideshow images are referenced in `src/pages/index.astro` as
-`/images/hero-1.jpg`, `/images/hero-2.jpg`, `/images/hero-3.jpg`. Drop files
-with those names into the `public/images/` folder and they'll replace the
-placeholder gradient automatically.
+Drop files into `src/assets/images/` using these names — `.jpg`, `.jpeg`, and
+`.png` all work:
+
+- `hero-1`, `hero-2`, `hero-3` — the homepage slideshow
+- `reason-1` through `reason-5` — the diamond photos in the Reasons section
+
+They replace the placeholder gradients automatically; a name with no matching
+file just keeps its gradient. Reason photos are clipped to a diamond, so use a
+square crop with the subject centred.
+
+Astro resizes and re-encodes these to WebP at build time (heroes at 1920px
+wide, diamonds at 600px), so full-resolution camera files are fine to commit —
+a 4MB JPEG lands as roughly 30KB of WebP in `dist/`. The originals in
+`src/assets/images/` are never modified. Because this happens at build time,
+a file added while `npm run dev` is running needs a dev-server restart.
+
+Note this is `src/assets/images/`, not `public/images/` — files in `public/`
+are copied out verbatim with no optimisation.

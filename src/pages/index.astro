@@ -1,38 +1,59 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import fs from 'node:fs';
-import path from 'node:path';
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 
-// Drop a photo into public/images/ named reason-1, reason-2, ... in any of
-// these formats and it gets picked up automatically — no markup edit needed.
-// If none of them exist the diamond keeps its CSS gradient placeholder.
-const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+// Photography lives in src/assets/images/ rather than public/ so Astro's
+// image pipeline can resize and re-encode it at build time. Drop a file in
+// named hero-1, reason-1, and so on — .jpg, .jpeg, and .png are all matched,
+// and the originals are never modified. Anything with no matching file keeps
+// the CSS gradient placeholder instead.
+const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/images/*.{jpg,jpeg,png}',
+  { eager: true },
+);
 
-function findImage(basename: string) {
-  for (const ext of IMAGE_EXTENSIONS) {
-    const file = path.join(process.cwd(), 'public', 'images', basename + ext);
-    if (fs.existsSync(file)) return `/images/${basename}${ext}`;
-  }
-  return null;
+const imagesByName = new Map<string, ImageMetadata>(
+  Object.entries(imageFiles).map(([filePath, module]) => [
+    filePath.split('/').pop()!.replace(/\.(jpg|jpeg|png)$/, ''),
+    module.default,
+  ]),
+);
+
+// width is the widest the image is ever displayed at, doubled for high-DPI
+// screens. Diamonds render in a 150px box whose inner layer is 150% of that.
+// Quality is set well below the WebP default: these are decorative background
+// photos, and the default re-encode can land larger than the source JPEG.
+async function backgroundStyle(basename: string, width: number) {
+  const source = imagesByName.get(basename);
+  if (!source) return undefined;
+  const optimized = await getImage({
+    src: source,
+    width: Math.min(width, source.width), // never upscale past the original
+    format: 'webp',
+    quality: 70,
+  });
+  return `background-image:url('${optimized.src}');`;
 }
 
-const reasonImages = [1, 2, 3, 4, 5].map((n) => findImage(`reason-${n}`));
-
-function diamondStyle(image: string | null) {
-  return image ? `background-image:url('${image}');` : undefined;
-}
+const heroSlides = await Promise.all(
+  [1, 2, 3].map((n) => backgroundStyle(`hero-${n}`, 1920)),
+);
+const reasonDiamonds = await Promise.all(
+  [1, 2, 3, 4, 5].map((n) => backgroundStyle(`reason-${n}`, 600)),
+);
 ---
 <BaseLayout title="Goblin's Lair — Warhammer &amp; Tabletop Hobby Shop">
 
   <!-- HERO -->
   <section class="hero" id="hero-slideshow">
-    <!-- Swap the background-image url() for real photography whenever it's ready.
-         The gradient is a placeholder fallback so it still looks intentional
-         until then. -->
+    <!-- Slides come from src/assets/images/hero-1, hero-2, hero-3. Extend the
+         list in the frontmatter to add more, and add a matching .hero-dot
+         below — the slideshow script counts whatever markup it finds. -->
     <div class="hero-slides" data-parallax="0.12">
-      <div class="hero-slide is-active" style="background-image:url('/images/hero-1.jpg');"></div>
-      <div class="hero-slide" style="background-image:url('/images/hero-2.jpg');"></div>
-      <div class="hero-slide" style="background-image:url('/images/hero-3.jpg');"></div>
+      {heroSlides.map((style, i) => (
+        <div class={i === 0 ? 'hero-slide is-active' : 'hero-slide'} style={style}></div>
+      ))}
     </div>
     <div class="hero-frame-vignette"></div>
 
@@ -75,7 +96,7 @@ function diamondStyle(image: string | null) {
     <div class="reasons-collage">
 
       <div class="reason-row">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={diamondStyle(reasonImages[0])}></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[0]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">01</span>
           <h3>A Table Always Open</h3>
@@ -84,7 +105,7 @@ function diamondStyle(image: string | null) {
       </div>
 
       <div class="reason-row is-reverse">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={diamondStyle(reasonImages[1])}></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={reasonDiamonds[1]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">02</span>
           <h3>Full Range, Always Stocked</h3>
@@ -93,7 +114,7 @@ function diamondStyle(image: string | null) {
       </div>
 
       <div class="reason-row">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={diamondStyle(reasonImages[2])}></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[2]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">03</span>
           <h3>Advice From People Who Play</h3>
@@ -102,7 +123,7 @@ function diamondStyle(image: string | null) {
       </div>
 
       <div class="reason-row is-reverse">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={diamondStyle(reasonImages[3])}></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={reasonDiamonds[3]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">04</span>
           <h3>Something On Most Weekends</h3>
@@ -111,7 +132,7 @@ function diamondStyle(image: string | null) {
       </div>
 
       <div class="reason-row">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={diamondStyle(reasonImages[4])}></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[4]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">05</span>
           <h3>A Genuine Community</h3>
