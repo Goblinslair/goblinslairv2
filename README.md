@@ -26,7 +26,8 @@ Post content goes here.
 ```
 
 A new page is generated automatically at `/blog/your-file-name`. No other
-files need to be touched.
+files need to be touched. The blog listing is paginated, so older posts move
+to `/blog/2`, `/blog/3`, and so on as new ones are added.
 
 ## Deploying
 - **Vercel (current hosting):** connect this repo (via GitHub import or
