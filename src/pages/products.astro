@@ -11,16 +11,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <section class="products">
     <div class="faction-tabs">
-      <button class="faction-tab is-active">All</button>
-      <button class="faction-tab">Warhammer 40,000</button>
-      <button class="faction-tab">Age of Sigmar</button>
-      <button class="faction-tab">Paints &amp; Tools</button>
-      <button class="faction-tab">Terrain</button>
+      <button class="faction-tab is-active" data-filter="all">All</button>
+      <button class="faction-tab" data-filter="40k">Warhammer 40,000</button>
+      <button class="faction-tab" data-filter="aos">Age of Sigmar</button>
+      <button class="faction-tab" data-filter="hobby">Paints &amp; Tools</button>
+      <button class="faction-tab" data-filter="terrain">Terrain</button>
     </div>
 
     <div class="product-grid">
 
-      <div class="product-card">
+      <div class="product-card" data-category="40k">
         <div class="product-img faction-40k">
           <div class="product-tag">40K</div>
           <div class="product-badge">New</div>
@@ -32,7 +32,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="40k">
         <div class="product-img faction-40k">
           <div class="product-tag">40K</div>
         </div>
@@ -43,7 +43,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="40k">
         <div class="product-img faction-40k">
           <div class="product-tag">40K</div>
           <div class="product-badge">Restock</div>
@@ -55,7 +55,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="aos">
         <div class="product-img faction-aos">
           <div class="product-tag">AoS</div>
           <div class="product-badge">New</div>
@@ -67,7 +67,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="aos">
         <div class="product-img faction-aos">
           <div class="product-tag">AoS</div>
         </div>
@@ -78,7 +78,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="aos">
         <div class="product-img faction-aos">
           <div class="product-tag">AoS</div>
           <div class="product-badge">Staff<br>Pick</div>
@@ -90,7 +90,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="hobby">
         <div class="product-img">
           <div class="product-tag">Hobby</div>
         </div>
@@ -101,7 +101,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="hobby">
         <div class="product-img">
           <div class="product-tag">Hobby</div>
         </div>
@@ -112,7 +112,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" data-category="terrain">
         <div class="product-img">
           <div class="product-tag">Terrain</div>
           <div class="product-badge">New</div>
@@ -125,6 +125,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
     </div>
+
+    <p class="product-empty" hidden>No products in this category yet.</p>
   </section>
 
 </BaseLayout>
+
+<script src="/product-filter.js" is:inline></script>
