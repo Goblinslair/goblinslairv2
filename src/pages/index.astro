@@ -1,5 +1,26 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Drop a photo into public/images/ named reason-1, reason-2, ... in any of
+// these formats and it gets picked up automatically — no markup edit needed.
+// If none of them exist the diamond keeps its CSS gradient placeholder.
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+
+function findImage(basename: string) {
+  for (const ext of IMAGE_EXTENSIONS) {
+    const file = path.join(process.cwd(), 'public', 'images', basename + ext);
+    if (fs.existsSync(file)) return `/images/${basename}${ext}`;
+  }
+  return null;
+}
+
+const reasonImages = [1, 2, 3, 4, 5].map((n) => findImage(`reason-${n}`));
+
+function diamondStyle(image: string | null) {
+  return image ? `background-image:url('${image}');` : undefined;
+}
 ---
 <BaseLayout title="Goblin's Lair — Warhammer &amp; Tabletop Hobby Shop">
 
@@ -54,7 +75,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="reasons-collage">
 
       <div class="reason-row">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style="background-image:url('/images/reason-1.jpg');"></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={diamondStyle(reasonImages[0])}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">01</span>
           <h3>A Table Always Open</h3>
@@ -63,7 +84,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <div class="reason-row is-reverse">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style="background-image:url('/images/reason-2.jpg');"></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={diamondStyle(reasonImages[1])}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">02</span>
           <h3>Full Range, Always Stocked</h3>
@@ -72,7 +93,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <div class="reason-row">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style="background-image:url('/images/reason-3.jpg');"></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={diamondStyle(reasonImages[2])}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">03</span>
           <h3>Advice From People Who Play</h3>
@@ -81,7 +102,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <div class="reason-row is-reverse">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style="background-image:url('/images/reason-4.jpg');"></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={diamondStyle(reasonImages[3])}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">04</span>
           <h3>Something On Most Weekends</h3>
@@ -90,7 +111,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <div class="reason-row">
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style="background-image:url('/images/reason-5.jpg');"></div></div></div>
+        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={diamondStyle(reasonImages[4])}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">05</span>
           <h3>A Genuine Community</h3>
