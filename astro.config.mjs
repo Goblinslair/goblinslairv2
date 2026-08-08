@@ -1,9 +1,12 @@
 import { defineConfig } from 'astro/config';
+import vercel from '@astrojs/vercel';
 
-// output: 'static' (the default) means `npm run build` produces a plain
-// dist/ folder of HTML, CSS, and JS — no server/adapter required.
-// That folder can be deployed to Vercel, or uploaded as-is to any
-// traditional web host later on.
+// output: 'static' by default — most pages still build to plain HTML/CSS/JS
+// with no server involved. Individual routes can opt into server rendering
+// with `export const prerender = false` (used by the product item page,
+// which renders per-request from live-synced product data instead of
+// pre-building one HTML file per product).
 export default defineConfig({
   output: 'static',
+  adapter: vercel(),
 });

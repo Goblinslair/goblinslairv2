@@ -1,5 +1,17 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+function slugify(name: string) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+const products = await getCollection('products');
+const categories = [...new Set(products.map((p) => p.data.category))].sort();
 ---
 <BaseLayout title="Products — Goblin's Lair">
 
@@ -10,123 +22,43 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </div>
 
   <section class="products">
+    <div class="product-search">
+      <input type="search" id="product-search" placeholder="Search products…" aria-label="Search products" />
+    </div>
+
     <div class="faction-tabs">
       <button class="faction-tab is-active" data-filter="all">All</button>
-      <button class="faction-tab" data-filter="40k">Warhammer 40,000</button>
-      <button class="faction-tab" data-filter="aos">Age of Sigmar</button>
-      <button class="faction-tab" data-filter="hobby">Paints &amp; Tools</button>
-      <button class="faction-tab" data-filter="terrain">Terrain</button>
+      {categories.map((category) => (
+        <button class="faction-tab" data-filter={slugify(category)}>{category}</button>
+      ))}
     </div>
 
     <div class="product-grid">
 
-      <div class="product-card" data-category="40k">
-        <div class="product-img faction-40k">
-          <div class="product-tag">40K</div>
-          <div class="product-badge">New</div>
-        </div>
-        <div class="product-body">
-          <h3>Infantry Squad — Box Set</h3>
-          <p>10-model plastic kit, multiple build options.</p>
-          <span class="price">$45</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="40k">
-        <div class="product-img faction-40k">
-          <div class="product-tag">40K</div>
-        </div>
-        <div class="product-body">
-          <h3>Battle Tank — War Machine Kit</h3>
-          <p>Heavy armor support with interchangeable weapons.</p>
-          <span class="price">$68</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="40k">
-        <div class="product-img faction-40k">
-          <div class="product-tag">40K</div>
-          <div class="product-badge">Restock</div>
-        </div>
-        <div class="product-body">
-          <h3>Combat Patrol — Starter Force</h3>
-          <p>Everything needed for a first army, table-ready.</p>
-          <span class="price">$120</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="aos">
-        <div class="product-img faction-aos">
-          <div class="product-tag">AoS</div>
-          <div class="product-badge">New</div>
-        </div>
-        <div class="product-body">
-          <h3>Realm Heroes — Character Set</h3>
-          <p>Three-model command set with alternate poses.</p>
-          <span class="price">$52</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="aos">
-        <div class="product-img faction-aos">
-          <div class="product-tag">AoS</div>
-        </div>
-        <div class="product-body">
-          <h3>Monster Kit — Large Beast</h3>
-          <p>Single-model centrepiece with dynamic base.</p>
-          <span class="price">$95</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="aos">
-        <div class="product-img faction-aos">
-          <div class="product-tag">AoS</div>
-          <div class="product-badge">Staff<br>Pick</div>
-        </div>
-        <div class="product-body">
-          <h3>Battletome — Core Rules</h3>
-          <p>Faction lore, rules, and warscrolls in one hardback.</p>
-          <span class="price">$38</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="hobby">
-        <div class="product-img">
-          <div class="product-tag">Hobby</div>
-        </div>
-        <div class="product-body">
-          <h3>Core Paint Set — 12 Pots</h3>
-          <p>Essential starter palette for new armies.</p>
-          <span class="price">$40</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="hobby">
-        <div class="product-img">
-          <div class="product-tag">Hobby</div>
-        </div>
-        <div class="product-body">
-          <h3>Precision Brush Set</h3>
-          <p>Three-brush set for base coats through fine detail.</p>
-          <span class="price">$28</span>
-        </div>
-      </div>
-
-      <div class="product-card" data-category="terrain">
-        <div class="product-img">
-          <div class="product-tag">Terrain</div>
-          <div class="product-badge">New</div>
-        </div>
-        <div class="product-body">
-          <h3>Ruined Battlefield — Terrain Kit</h3>
-          <p>Modular scenery pieces, unpainted resin.</p>
-          <span class="price">$56</span>
-        </div>
-      </div>
+      {products.map((product) => (
+        <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-name={product.data.name.toLowerCase()}>
+          <div
+            class="product-img"
+            style={product.data.image ? `background-image:url(${product.data.image});background-size:cover;background-position:center;` : undefined}
+          >
+            <div class="product-tag">{product.data.category}</div>
+            {product.data.stock !== null && product.data.stock <= 0 && (
+              <div class="product-badge">Out of Stock</div>
+            )}
+            {product.data.stock !== null && product.data.stock > 0 && product.data.stock <= 3 && (
+              <div class="product-badge">Low Stock</div>
+            )}
+          </div>
+          <div class="product-body">
+            <h3>{product.data.name}</h3>
+            <span class="price">RM{product.data.price.toFixed(2)}</span>
+          </div>
+        </a>
+      ))}
 
     </div>
 
-    <p class="product-empty" hidden>No products in this category yet.</p>
+    <p class="product-empty" hidden>No products found.</p>
   </section>
 
 </BaseLayout>

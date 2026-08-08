@@ -9,4 +9,19 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+// Synced from Loyverse POS via `npm run sync-products` (see scripts/sync-products.mjs).
+// Files in src/content/products/ are generated output, not hand-authored.
+const products = defineCollection({
+  type: 'data',
+  schema: z.object({
+    name: z.string(),
+    description: z.string().default(''),
+    category: z.string(),
+    price: z.number(),
+    image: z.string().nullable().default(null),
+    sku: z.string().nullable().default(null),
+    stock: z.number().nullable().default(null),
+  }),
+});
+
+export const collections = { blog, products };

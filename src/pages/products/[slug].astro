@@ -1,0 +1,48 @@
+---
+// Renders per-request instead of pre-building one HTML file per product —
+// there are hundreds of products synced from Loyverse and that's too many
+// static files to build and maintain. Content is still fully in the HTML
+// response (rendered on the server before it reaches the browser), so SEO
+// and link-preview crawlers see the real product info, same as a static page.
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { sanitizeHtml, stripHtml } from '../../lib/html';
+
+const { slug } = Astro.params;
+const products = await getCollection('products');
+const product = products.find((p) => p.id === slug);
+
+if (!product) {
+  return new Response(null, { status: 404, statusText: 'Not found' });
+}
+
+const { name, description, category, price, image, sku, stock } = product.data;
+const stockLabel = stock === null ? null : stock <= 0 ? 'Out of Stock' : stock <= 3 ? 'Low Stock' : 'In Stock';
+const descriptionHtml = description ? sanitizeHtml(description) : '';
+const descriptionText = description ? stripHtml(description) : '';
+---
+<BaseLayout title={`${name} — Goblin's Lair`} description={descriptionText || undefined} image={image || undefined}>
+
+  <section class="product-detail">
+    <div
+      class="product-detail-img"
+      style={image ? `background-image:url(${image});background-size:cover;background-position:center;` : undefined}
+    >
+      {stockLabel && <div class="product-badge">{stockLabel}</div>}
+    </div>
+
+    <div class="product-detail-body">
+      <div class="hero-eyebrow">{category}</div>
+      <h1>{name}</h1>
+      <span class="price">RM{price.toFixed(2)}</span>
+      {descriptionHtml && <div class="product-description" set:html={descriptionHtml} />}
+      {sku && <p class="product-sku">SKU: {sku}</p>}
+      {stockLabel && <p class="product-stock">{stockLabel}</p>}
+      <a class="btn" href="/products">&larr; Back to Products</a>
+
+    </div>
+  </section>
+
+</BaseLayout>
