@@ -59,6 +59,10 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
     </div>
 
     <p class="product-empty" hidden>No products found.</p>
+
+    <div class="product-load-more">
+      <button id="product-load-more" class="btn btn-outline" hidden>Load More</button>
+    </div>
   </section>
 
 </BaseLayout>

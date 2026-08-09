@@ -463,6 +463,10 @@ section{ padding: 100px 32px; }
 
 .product-empty{ text-align: center; color: rgba(42,26,18,0.6); padding: 40px 0 0; }
 
+.product-load-more{ text-align: center; margin-top: 48px; }
+.products .btn-outline{ color: var(--maroon); border-color: rgba(42,26,18,0.35); }
+.products .btn-outline:hover{ border-color: var(--maroon); color: var(--cream); background: var(--maroon); }
+
 .product-grid{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
