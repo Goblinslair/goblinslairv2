@@ -62,15 +62,28 @@ const CATEGORY_LABEL_OVERRIDES: Record<string, string> = {
   "ADEPTUS / LEGIO CUSTODES": "Adeptus Custodes",
 };
 
+// Categories listed here skip their game-system group entirely and render
+// as standalone buttons at the drawer root instead (alongside "All
+// Products"), for cross-cutting product lines that don't belong to one
+// faction/system.
+const ROOT_CATEGORIES = new Set(["Spearhead"]);
+
+const rootEntries: FilterEntry[] = [];
+
 const GROUP_ORDER = ['Warhammer 40,000', 'Age of Sigmar', 'The Horus Heresy', 'Other Games', 'Hobby & Supplies'];
 const groupsMap = new Map(GROUP_ORDER.map((label) => [label, [] as FilterEntry[]]));
 for (const category of categories) {
   const slug = slugify(category);
-  groupsMap.get(groupFor(category))!.push({
+  const entry: FilterEntry = {
     label: CATEGORY_LABEL_OVERRIDES[category] || toTitleCase(category),
     filter: slug,
     categoryMatch: slug,
-  });
+  };
+  if (ROOT_CATEGORIES.has(category)) {
+    rootEntries.push(entry);
+  } else {
+    groupsMap.get(groupFor(category))!.push(entry);
+  }
 }
 
 // Adeptus / Legio Custodes is one Loyverse category spanning two product
@@ -94,7 +107,6 @@ if (categories.includes("ADEPTUS / LEGIO CUSTODES")) {
 // script to ignore category entirely and match on name prefix alone.
 // Sits at the drawer root (not nested in a group) since it cuts across
 // every game system.
-const rootEntries: FilterEntry[] = [];
 if (products.some((p) => /^combat patrol/i.test(p.data.name))) {
   rootEntries.push({
     label: "Combat Patrol",
