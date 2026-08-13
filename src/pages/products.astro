@@ -81,8 +81,11 @@ if (categories.includes("ADEPTUS / LEGIO CUSTODES")) {
 // Patrol: Space Wolves, etc.) with no Loyverse category of their own —
 // they're scattered across ~13 faction categories. "*" tells the filter
 // script to ignore category entirely and match on name prefix alone.
+// Sits at the drawer root (not nested in a group) since it cuts across
+// every game system.
+const rootEntries: FilterEntry[] = [];
 if (products.some((p) => /^combat patrol/i.test(p.data.name))) {
-  groupsMap.get('Hobby & Supplies')!.push({
+  rootEntries.push({
     label: "Combat Patrol",
     filter: 'combat-patrol',
     categoryMatch: '*',
@@ -128,6 +131,14 @@ const groups = GROUP_ORDER
         <div class="filter-drawer-body">
           <div class="filter-drawer-view" data-view="top">
             <button class="filter-drawer-item filter-drawer-item-all" data-filter="all">All Products</button>
+            {rootEntries.map((entry) => (
+              <button
+                class="filter-drawer-item"
+                data-filter={entry.filter}
+                data-category={entry.categoryMatch}
+                data-name-prefix={entry.namePrefix}
+              >{entry.label}</button>
+            ))}
             {groups.map((group) => (
               <button class="filter-drawer-item filter-drawer-group" data-group={group.slug} data-label={group.label}>
                 {group.label}
