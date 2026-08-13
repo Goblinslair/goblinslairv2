@@ -9,6 +9,7 @@
   var activeFilter = 'all';
   var activeCategoryMatch = '';
   var activeNamePrefix = '';
+  var activeNameContains = '';
   var visibleLimit = BATCH_SIZE;
 
   function applyFilters() {
@@ -17,10 +18,16 @@
     var shownCount = 0;
 
     cards.forEach(function (card) {
-      var matchesCategory = activeFilter === 'all' || activeCategoryMatch === '*' || card.getAttribute('data-category') === activeCategoryMatch;
-      var matchesNamePrefix = !activeNamePrefix || card.getAttribute('data-name').indexOf(activeNamePrefix) === 0;
-      var matchesSearch = !query || card.getAttribute('data-name').indexOf(query) !== -1;
-      var isMatch = matchesCategory && matchesNamePrefix && matchesSearch;
+      var cardName = card.getAttribute('data-name');
+      var matchesCategory = activeCategoryMatch === '*' || card.getAttribute('data-category') === activeCategoryMatch;
+      var matchesNamePrefix = !activeNamePrefix || cardName.indexOf(activeNamePrefix) === 0;
+      // nameContains is an OR: it pulls in matches from other categories
+      // (e.g. "Spearhead: Blades of Khorne...") without removing them
+      // from their own category's filter — it never excludes results.
+      var matchesNameContains = !!activeNameContains && cardName.indexOf(activeNameContains) !== -1;
+      var matchesFilter = activeFilter === 'all' || (matchesCategory && matchesNamePrefix) || matchesNameContains;
+      var matchesSearch = !query || cardName.indexOf(query) !== -1;
+      var isMatch = matchesFilter && matchesSearch;
 
       if (!isMatch) {
         card.hidden = true;
@@ -97,10 +104,11 @@
     openBtn.focus();
   }
 
-  function setActiveFilter(filterValue, label, categoryMatch, namePrefix) {
+  function setActiveFilter(filterValue, label, categoryMatch, namePrefix, nameContains) {
     activeFilter = filterValue;
     activeCategoryMatch = categoryMatch || filterValue;
     activeNamePrefix = namePrefix || '';
+    activeNameContains = nameContains || '';
     visibleLimit = BATCH_SIZE;
 
     leafButtons.forEach(function (btn) {
@@ -141,7 +149,8 @@
         btn.getAttribute('data-filter'),
         btn.textContent.trim(),
         btn.getAttribute('data-category'),
-        btn.getAttribute('data-name-prefix')
+        btn.getAttribute('data-name-prefix'),
+        btn.getAttribute('data-name-contains')
       );
       closeDrawer();
     });

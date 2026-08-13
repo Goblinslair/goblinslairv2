@@ -54,9 +54,19 @@ function groupFor(category: string) {
 
 // A filter "entry" is a drawer row: it carries its own display label, the
 // unique id used for is-active tracking + the result chip, which real
-// category slug to match against product cards, and an optional name
-// prefix for splitting one Loyverse category into multiple entries.
-type FilterEntry = { label: string; filter: string; categoryMatch: string; namePrefix?: string };
+// category slug to match against product cards, an optional name prefix
+// (AND constraint — narrows within categoryMatch, or bypasses category
+// entirely when categoryMatch is "*"), and an optional nameContains
+// (OR condition — pulls in products from OTHER categories whose name
+// mentions this term, without removing them from their own category's
+// filter).
+type FilterEntry = {
+  label: string;
+  filter: string;
+  categoryMatch: string;
+  namePrefix?: string;
+  nameContains?: string;
+};
 
 const CATEGORY_LABEL_OVERRIDES: Record<string, string> = {
   "ADEPTUS / LEGIO CUSTODES": "Adeptus Custodes",
@@ -67,6 +77,14 @@ const CATEGORY_LABEL_OVERRIDES: Record<string, string> = {
 // Products"), for cross-cutting product lines that don't belong to one
 // faction/system.
 const ROOT_CATEGORIES = new Set(["Spearhead"]);
+
+// Extra OR-match term per root category: also pull in products from any
+// category whose name contains this word, in addition to the category's
+// own items. Those products stay listed under their original category
+// filter too — this only adds a second way to find them.
+const ROOT_CATEGORY_NAME_CONTAINS: Record<string, string> = {
+  "Spearhead": "spearhead",
+};
 
 const rootEntries: FilterEntry[] = [];
 
@@ -80,6 +98,7 @@ for (const category of categories) {
     categoryMatch: slug,
   };
   if (ROOT_CATEGORIES.has(category)) {
+    if (ROOT_CATEGORY_NAME_CONTAINS[category]) entry.nameContains = ROOT_CATEGORY_NAME_CONTAINS[category];
     rootEntries.push(entry);
   } else {
     groupsMap.get(groupFor(category))!.push(entry);
@@ -160,6 +179,7 @@ const groups = GROUP_ORDER
                 data-filter={entry.filter}
                 data-category={entry.categoryMatch}
                 data-name-prefix={entry.namePrefix}
+                data-name-contains={entry.nameContains}
               >{entry.label}</button>
             ))}
             {groups.map((group) => (
@@ -178,6 +198,7 @@ const groups = GROUP_ORDER
                   data-filter={entry.filter}
                   data-category={entry.categoryMatch}
                   data-name-prefix={entry.namePrefix}
+                  data-name-contains={entry.nameContains}
                 >{entry.label}</button>
               ))}
             </div>
