@@ -6,11 +6,34 @@ interface Props {
 }
 const { title, description = "Warhammer 40,000 and Age of Sigmar miniatures, paints, and hobby supplies.", image } = Astro.props;
 const path = Astro.url.pathname;
+const canonicalURL = new URL(path, Astro.site);
 
 function isActive(href: string) {
   if (href === '/') return path === '/';
   return path.startsWith(href);
 }
+
+// Same address/hours as the Contact page, kept here too for LocalBusiness
+// structured data. Update both places if either ever changes.
+const localBusiness = {
+  '@context': 'https://schema.org',
+  '@type': 'Store',
+  name: "Goblin's Lair",
+  email: 'goblinslairpj@gmail.com',
+  url: Astro.site?.href,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '84A, Jalan SS 24/2, Taman Megah',
+    addressLocality: 'Petaling Jaya',
+    addressRegion: 'Selangor',
+    postalCode: '47301',
+    addressCountry: 'MY',
+  },
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Wednesday', 'Thursday', 'Friday'], opens: '13:30', closes: '20:30' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday'], opens: '12:30', closes: '21:00' },
+  ],
+};
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -19,13 +42,22 @@ function isActive(href: string) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
   <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Goblin's Lair" />
+  <meta property="og:url" content={canonicalURL} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   {image && <meta property="og:image" content={image} />}
+  <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  {image && <meta name="twitter:image" content={image} />}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json" set:html={JSON.stringify(localBusiness)} />
 </head>
 <body>
 

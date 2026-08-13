@@ -6,6 +6,14 @@
   font-display: swap;
 }
 
+/* Type scale in use across the site (documented, not enforced by tokens -
+   sizes are set per-selector with clamp() for responsiveness):
+     Display / h1:   clamp(2.6rem, 6vw, 4.6rem)  - home hero only
+     Page h1:        clamp(2.2rem, 4.6vw, 3.2rem) - page-header banners
+     Section h2:     clamp(1.8rem, 3.4vw, 2.6rem) - .section-head
+     Body copy:      1rem, Work Sans 400, line-height 1.6
+   'Althea' (serif, self-hosted) is reserved for display type: headings,
+   nav, buttons, eyebrows, labels. Work Sans carries all paragraph text. */
 :root{
   --cream: #ecead7;
   --cream-soft: #e2ded0;
@@ -1286,3 +1294,31 @@ footer .footer-links a:hover{ color: var(--brass); }
 }
 .blog-post-body p{ margin-bottom: 20px; }
 .blog-post-body strong{ color: var(--brass); }
+
+/* ---------- SCROLL REVEAL ---------- */
+/* Motivated by hierarchy: reasons and events are read as a sequence, one
+   card/row at a time, so revealing them in that same order on scroll
+   reinforces the list structure instead of dumping it all at once. */
+[data-reveal]{
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+}
+[data-reveal].is-revealed{ opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce){
+  [data-reveal]{ opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------- 404 ---------- */
+.not-found{
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 32px 120px;
+  text-align: center;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.not-found .btn-outline{ color: var(--maroon); border-color: rgba(42,26,18,0.35); }
+.not-found .btn-outline:hover{ border-color: var(--maroon); color: var(--cream); background: var(--maroon); }

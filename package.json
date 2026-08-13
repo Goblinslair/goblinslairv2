@@ -10,6 +10,7 @@
     "sync-paint-images": "node scripts/sync-paint-images.mjs"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
     "@astrojs/vercel": "^9.0.5",
     "astro": "^5.0.0"
   }

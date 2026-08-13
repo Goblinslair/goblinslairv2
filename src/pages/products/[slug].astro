@@ -14,35 +14,51 @@ const { slug } = Astro.params;
 const products = await getCollection('products');
 const product = products.find((p) => p.id === slug);
 
-if (!product) {
-  return new Response(null, { status: 404, statusText: 'Not found' });
-}
+if (!product) Astro.response.status = 404;
 
-const { name, description, category, price, image, sku, stock } = product.data;
-const stockLabel = stock === null ? null : stock <= 0 ? 'Out of Stock' : stock <= 3 ? 'Low Stock' : 'In Stock';
+const { name, description, category, price, image, sku, stock } = product?.data ?? {};
+const stockLabel = stock === null || stock === undefined ? null : stock <= 0 ? 'Out of Stock' : stock <= 3 ? 'Low Stock' : 'In Stock';
 const descriptionHtml = description ? sanitizeHtml(description) : '';
 const descriptionText = description ? stripHtml(description) : '';
 ---
-<BaseLayout title={`${name} — Goblin's Lair`} description={descriptionText || undefined} image={image || undefined}>
+<BaseLayout
+  title={product ? `${name} — Goblin's Lair` : "Product Not Found — Goblin's Lair"}
+  description={product ? (descriptionText || undefined) : undefined}
+  image={image || undefined}
+>
 
-  <section class="product-detail">
-    <div
-      class="product-detail-img"
-      style={image ? `background-image:url(${image});background-size:contain;background-repeat:no-repeat;background-position:center;` : undefined}
-    >
-      {stockLabel && <div class="product-badge">{stockLabel}</div>}
-    </div>
+  {product ? (
+    <section class="product-detail">
+      <div
+        class="product-detail-img"
+        style={image ? `background-image:url(${image});background-size:contain;background-repeat:no-repeat;background-position:center;` : undefined}
+      >
+        {stockLabel && <div class="product-badge">{stockLabel}</div>}
+      </div>
 
-    <div class="product-detail-body">
-      <div class="hero-eyebrow">{category}</div>
-      <h1>{name}</h1>
-      <span class="price">RM{price.toFixed(2)}</span>
-      {descriptionHtml && <div class="product-description" set:html={descriptionHtml} />}
-      {sku && <p class="product-sku">SKU: {sku}</p>}
-      {stockLabel && <p class="product-stock">{stockLabel}</p>}
-      <a class="btn" href="/products">&larr; Back to Products</a>
+      <div class="product-detail-body">
+        <div class="hero-eyebrow">{category}</div>
+        <h1>{name}</h1>
+        <span class="price">RM{price.toFixed(2)}</span>
+        {descriptionHtml && <div class="product-description" set:html={descriptionHtml} />}
+        {sku && <p class="product-sku">SKU: {sku}</p>}
+        {stockLabel && <p class="product-stock">{stockLabel}</p>}
+        <a class="btn" href="/products">&larr; Back to Products</a>
 
-    </div>
-  </section>
+      </div>
+    </section>
+  ) : (
+    <>
+      <div class="page-header">
+        <div class="hero-eyebrow">Lost in the Warp</div>
+        <h1>Product Not Found</h1>
+        <p>This item isn't in the range, or it's been delisted.</p>
+      </div>
+      <section class="not-found">
+        <a href="/products" class="btn btn-primary">Shop the Range</a>
+        <a href="/" class="btn btn-outline">Back Home</a>
+      </section>
+    </>
+  )}
 
 </BaseLayout>
