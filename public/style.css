@@ -16,6 +16,7 @@
   --gunmetal: #494f52;
   --moss: #4a5d3a;
   --shadow: rgba(42,26,18,0.18);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 *{ box-sizing: border-box; margin:0; padding:0; }
@@ -108,17 +109,19 @@ nav a::after{
   content: "";
   position: absolute;
   left: 0; bottom: -2px;
-  width: 0%;
+  width: 100%;
   height: 2px;
   background: var(--brass);
-  transition: width 0.25s ease;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s var(--ease-out);
 }
 
 nav a:hover{ color: var(--brass); }
-nav a:hover::after{ width: 100%; }
+nav a:hover::after{ transform: scaleX(1); }
 
 nav a.active{ color: var(--brass); }
-nav a.active::after{ width: 100%; background: var(--brass); }
+nav a.active::after{ transform: scaleX(1); background: var(--brass); }
 
 /* ---------- HAMBURGER (mobile only) ---------- */
 .hamburger{
@@ -134,7 +137,9 @@ nav a.active::after{ width: 100%; background: var(--brass); }
   border: none;
   cursor: pointer;
   z-index: 210;
+  transition: transform 0.1s ease-out;
 }
+.hamburger:active{ transform: scale(0.9); }
 .hamburger span{
   display: block;
   width: 24px;
@@ -161,7 +166,7 @@ nav a.active::after{ width: 100%; background: var(--brass); }
   opacity: 0;
   visibility: hidden;
   transform: translateY(-12px);
-  transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s;
+  transition: opacity 0.28s var(--ease-out), transform 0.28s var(--ease-out), visibility 0.28s;
 }
 .mobile-menu.is-open{
   opacity: 1;
@@ -275,9 +280,10 @@ body.menu-open{ overflow: hidden; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease-out;
 }
 .hero-arrow:hover{ background: var(--brass); border-color: var(--brass); color: var(--maroon-deep); }
+.hero-arrow:active{ transform: translateY(-50%) scale(0.92); }
 .hero-arrow-left{ left: 24px; }
 .hero-arrow-right{ right: 24px; }
 
@@ -307,6 +313,7 @@ body.menu-open{ overflow: hidden; }
   transition: background 0.2s ease, transform 0.2s ease;
 }
 .hero-dot:hover{ background: rgba(236,234,215,0.7); }
+.hero-dot:active{ transform: scale(0.85); }
 .hero-dot.is-active{ background: var(--brass); transform: scale(1.2); }
 
 .hero-eyebrow{
@@ -375,10 +382,11 @@ body.menu-open{ overflow: hidden; }
   padding: 16px 38px;
   border-radius: 2px;
   border: 1px solid var(--brass);
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.1s ease-out;
   position: relative;
   cursor: pointer;
 }
+.btn:active{ transform: scale(0.97); }
 
 .btn-primary{ background: var(--brass); color: var(--maroon-deep); }
 .btn-primary:hover{ background: transparent; color: var(--brass); }
@@ -421,9 +429,10 @@ section{ padding: 100px 32px; }
   border-radius: 2px;
   background: var(--cream-soft);
   color: var(--ink);
+  transition: border-color 0.2s ease;
 }
 .product-search input::placeholder{ color: rgba(42,26,18,0.45); }
-.product-search input:focus{ outline: none; border-color: var(--maroon); }
+.product-search input:focus{ border-color: var(--maroon); }
 
 .faction-tabs{
   display: flex;
@@ -442,7 +451,7 @@ section{ padding: 100px 32px; }
   border-radius: 2px;
   color: var(--cream);
   background: transparent;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.1s ease-out;
 }
 .faction-tab.is-active,
 .faction-tab:hover{
@@ -450,6 +459,7 @@ section{ padding: 100px 32px; }
   color: var(--maroon-deep);
   border-color: var(--brass);
 }
+.faction-tab:active{ transform: scale(0.96); }
 
 /* ---------- PRODUCTS ---------- */
 .products{ background: var(--cream); }
@@ -482,13 +492,16 @@ section{ padding: 100px 32px; }
   border: 1px solid rgba(236,234,215,0.15);
   border-radius: 4px;
   overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
   position: relative;
   display: block;
   text-decoration: none;
   color: inherit;
 }
-.product-card:hover{ transform: translateY(-6px); box-shadow: 0 18px 30px var(--shadow); }
+@media (hover: hover) and (pointer: fine){
+  .product-card:hover{ transform: translateY(-6px); box-shadow: 0 18px 30px var(--shadow); }
+}
+.product-card:active{ transform: scale(0.98); }
 .product-card[hidden]{ display: none; }
 
 .products .product-card{ background: var(--cream-soft); border-color: rgba(42,26,18,0.12); }
@@ -708,7 +721,9 @@ section{ padding: 100px 32px; }
   font-weight: 600;
   border-bottom: 1px solid var(--brass);
   padding-bottom: 2px;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
+.blog-link:hover{ color: var(--maroon); border-color: var(--maroon); }
 
 .blog-feature{
   max-width: 1180px;
@@ -747,7 +762,9 @@ section{ padding: 100px 32px; }
   font-weight: 600;
   border-bottom: 1px solid var(--brass);
   padding-bottom: 2px;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
+.pagination-link:hover{ color: var(--maroon); border-color: var(--maroon); }
 .pagination-link.is-disabled{
   color: rgba(42,26,18,0.3);
   border-bottom-color: rgba(42,26,18,0.15);
@@ -799,12 +816,13 @@ section{ padding: 100px 32px; }
   color: var(--ink);
   font-family: 'Work Sans', sans-serif;
   font-size: 0.95rem;
+  transition: border-color 0.2s ease;
 }
 .contact-form input::placeholder,
 .contact-form textarea::placeholder{ color: rgba(42,26,18,0.4); }
 .contact-form input:focus,
 .contact-form textarea:focus,
-.contact-form select:focus{ outline: none; border-color: var(--brass); }
+.contact-form select:focus{ border-color: var(--brass); }
 .contact-form textarea{ resize: vertical; min-height: 120px; }
 
 .contact-info{ display: flex; flex-direction: column; gap: 28px; }
