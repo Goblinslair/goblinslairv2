@@ -28,7 +28,7 @@ const descriptionText = description ? stripHtml(description) : '';
   <section class="product-detail">
     <div
       class="product-detail-img"
-      style={image ? `background-image:url(${image});background-size:cover;background-position:center;` : undefined}
+      style={image ? `background-image:url(${image});background-size:contain;background-repeat:no-repeat;background-position:center;` : undefined}
     >
       {stockLabel && <div class="product-badge">{stockLabel}</div>}
     </div>

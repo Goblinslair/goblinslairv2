@@ -12,6 +12,43 @@ function slugify(name: string) {
 
 const products = await getCollection('products');
 const categories = [...new Set(products.map((p) => p.data.category))].sort();
+
+// Loyverse gives us a flat category per product — group them into game
+// systems here so the filter drawer can mirror GW's own site structure.
+// Anything not named below (new Loyverse categories, etc.) safely falls
+// into "Hobby & Supplies" rather than disappearing from the filter.
+const FORTY_K = new Set([
+  "ADEPTA SORORITAS", "ADEPTUS / LEGIO CUSTODES", "ADEPTUS MECHANICUS", "AELDARI", "ASTRA MILITARUM",
+  "BLACK TEMPLARS", "BLOOD ANGELS", "CHAOS SPACE MARINES", "DARK ANGELS", "DEATH GUARD", "DEATHWATCH",
+  "DRUKHARI", "EMPEROR'S CHILDREN", "GENESTEALER CULTS", "IMPERIAL FISTS", "IMPERIAL KNIGHTS", "IRON HANDS",
+  "LEAGUES OF VOTANN", "NECRONS", "ORKS", "SALAMANDERS", "SPACE MARINES", "SPACE WOLVES", "T'AU EMPIRE",
+  "THOUSAND SONS", "TYRANIDS", "ULTRAMARINES", "WHITE SCARS", "WORLD EATERS",
+]);
+const AGE_OF_SIGMAR = new Set([
+  "BLADES OF KHORNE", "CITIES OF SIGMAR", "DAUGHTERS OF KHAINE", "DISCIPLES OF TZEENTCH", "GLOOMSPITE GITZ",
+  "HEDONITES OF SLAANESH", "HELSMITHS OF HASHUT", "IDONETH DEEPKIN", "KHARADRON OVERLORDS", "LUMINETH REALM-LORDS",
+  "MAGGOTKIN OF NURGLE", "NIGHTHAUNT", "ORRUK WARCLANS", "OSSIARCH BONEREAPERS", "SERAPHON", "SKAVEN",
+  "SLAVES TO DARKNESS", "SOULBLIGHT GRAVELORDS", "STORMCAST ETERNALS", "SYLVANETH",
+]);
+const HORUS_HERESY = new Set(["HORUS HERESY: LEGIONES ASTARTES"]);
+const OTHER_GAMES = new Set(["NECROMUNDA", "BLOOD BOWL"]);
+
+function groupFor(category: string) {
+  if (FORTY_K.has(category)) return 'Warhammer 40,000';
+  if (AGE_OF_SIGMAR.has(category)) return 'Age of Sigmar';
+  if (HORUS_HERESY.has(category)) return 'The Horus Heresy';
+  if (OTHER_GAMES.has(category)) return 'Other Games';
+  return 'Hobby & Supplies';
+}
+
+const GROUP_ORDER = ['Warhammer 40,000', 'Age of Sigmar', 'The Horus Heresy', 'Other Games', 'Hobby & Supplies'];
+const groupsMap = new Map(GROUP_ORDER.map((label) => [label, [] as string[]]));
+for (const category of categories) {
+  groupsMap.get(groupFor(category))!.push(category);
+}
+const groups = GROUP_ORDER
+  .map((label) => ({ label, slug: slugify(label), categories: groupsMap.get(label)! }))
+  .filter((g) => g.categories.length > 0);
 ---
 <BaseLayout title="Products — Goblin's Lair">
 
@@ -26,11 +63,44 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
       <input type="search" id="product-search" placeholder="Search products…" aria-label="Search products" />
     </div>
 
-    <div class="faction-tabs">
-      <button class="faction-tab is-active" data-filter="all">All</button>
-      {categories.map((category) => (
-        <button class="faction-tab" data-filter={slugify(category)}>{category}</button>
-      ))}
+    <div class="product-filter-bar">
+      <button id="filter-drawer-open" class="btn btn-outline" type="button" aria-haspopup="dialog">
+        Filter by Faction
+      </button>
+      <div class="active-filter-chip" id="active-filter-chip" hidden>
+        <span id="active-filter-chip-text"></span>
+        <button id="active-filter-chip-clear" type="button" aria-label="Clear filter">&times;</button>
+      </div>
+    </div>
+
+    <div class="filter-drawer" id="filter-drawer" aria-hidden="true">
+      <div class="filter-drawer-backdrop" id="filter-drawer-backdrop"></div>
+      <div class="filter-drawer-panel" role="dialog" aria-modal="true" aria-label="Filter products">
+        <div class="filter-drawer-header">
+          <button class="filter-drawer-back" id="filter-drawer-back" type="button" aria-label="Back" hidden>&larr;</button>
+          <span class="filter-drawer-title" id="filter-drawer-title">Filter by Faction</span>
+          <button class="filter-drawer-close" id="filter-drawer-close" type="button" aria-label="Close">&times;</button>
+        </div>
+        <div class="filter-drawer-body">
+          <div class="filter-drawer-view" data-view="top">
+            <button class="filter-drawer-item filter-drawer-item-all" data-filter="all">All Products</button>
+            {groups.map((group) => (
+              <button class="filter-drawer-item filter-drawer-group" data-group={group.slug} data-label={group.label}>
+                {group.label}
+                <span class="filter-drawer-count">{group.categories.length}</span>
+                <span class="filter-drawer-chevron">&rsaquo;</span>
+              </button>
+            ))}
+          </div>
+          {groups.map((group) => (
+            <div class="filter-drawer-view" data-view={group.slug} hidden>
+              {group.categories.map((category) => (
+                <button class="filter-drawer-item" data-filter={slugify(category)}>{category}</button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
 
     <div class="product-grid">
@@ -39,7 +109,7 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
         <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-name={product.data.name.toLowerCase()}>
           <div
             class="product-img"
-            style={product.data.image ? `background-image:url(${product.data.image});background-size:cover;background-position:center;` : undefined}
+            style={product.data.image ? `background-image:url(${product.data.image});background-size:contain;background-repeat:no-repeat;background-position:center;` : undefined}
           >
             <div class="product-tag">{product.data.category}</div>
             {product.data.stock !== null && product.data.stock <= 0 && (
