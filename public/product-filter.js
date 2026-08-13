@@ -17,7 +17,7 @@
     var shownCount = 0;
 
     cards.forEach(function (card) {
-      var matchesCategory = activeFilter === 'all' || card.getAttribute('data-category') === activeCategoryMatch;
+      var matchesCategory = activeFilter === 'all' || activeCategoryMatch === '*' || card.getAttribute('data-category') === activeCategoryMatch;
       var matchesNamePrefix = !activeNamePrefix || card.getAttribute('data-name').indexOf(activeNamePrefix) === 0;
       var matchesSearch = !query || card.getAttribute('data-name').indexOf(query) !== -1;
       var isMatch = matchesCategory && matchesNamePrefix && matchesSearch;

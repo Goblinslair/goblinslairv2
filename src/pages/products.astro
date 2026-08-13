@@ -77,6 +77,19 @@ if (categories.includes("ADEPTUS / LEGIO CUSTODES")) {
   });
 }
 
+// Combat Patrol boxes exist per-faction (Combat Patrol: Necrons, Combat
+// Patrol: Space Wolves, etc.) with no Loyverse category of their own —
+// they're scattered across ~13 faction categories. "*" tells the filter
+// script to ignore category entirely and match on name prefix alone.
+if (products.some((p) => /^combat patrol/i.test(p.data.name))) {
+  groupsMap.get('Hobby & Supplies')!.push({
+    label: "Combat Patrol",
+    filter: 'combat-patrol',
+    categoryMatch: '*',
+    namePrefix: 'combat patrol',
+  });
+}
+
 const groups = GROUP_ORDER
   .map((label) => ({ label, slug: slugify(label), entries: groupsMap.get(label)! }))
   .filter((g) => g.entries.length > 0);
