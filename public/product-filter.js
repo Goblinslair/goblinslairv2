@@ -7,6 +7,8 @@
 
   var BATCH_SIZE = 24;
   var activeFilter = 'all';
+  var activeCategoryMatch = '';
+  var activeNamePrefix = '';
   var visibleLimit = BATCH_SIZE;
 
   function applyFilters() {
@@ -15,9 +17,10 @@
     var shownCount = 0;
 
     cards.forEach(function (card) {
-      var matchesCategory = activeFilter === 'all' || card.getAttribute('data-category') === activeFilter;
+      var matchesCategory = activeFilter === 'all' || card.getAttribute('data-category') === activeCategoryMatch;
+      var matchesNamePrefix = !activeNamePrefix || card.getAttribute('data-name').indexOf(activeNamePrefix) === 0;
       var matchesSearch = !query || card.getAttribute('data-name').indexOf(query) !== -1;
-      var isMatch = matchesCategory && matchesSearch;
+      var isMatch = matchesCategory && matchesNamePrefix && matchesSearch;
 
       if (!isMatch) {
         card.hidden = true;
@@ -94,8 +97,10 @@
     openBtn.focus();
   }
 
-  function setActiveFilter(filterValue, label) {
+  function setActiveFilter(filterValue, label, categoryMatch, namePrefix) {
     activeFilter = filterValue;
+    activeCategoryMatch = categoryMatch || filterValue;
+    activeNamePrefix = namePrefix || '';
     visibleLimit = BATCH_SIZE;
 
     leafButtons.forEach(function (btn) {
@@ -132,7 +137,12 @@
 
   leafButtons.forEach(function (btn) {
     btn.addEventListener('click', function () {
-      setActiveFilter(btn.getAttribute('data-filter'), btn.textContent.trim());
+      setActiveFilter(
+        btn.getAttribute('data-filter'),
+        btn.textContent.trim(),
+        btn.getAttribute('data-category'),
+        btn.getAttribute('data-name-prefix')
+      );
       closeDrawer();
     });
   });

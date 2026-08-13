@@ -41,14 +41,45 @@ function groupFor(category: string) {
   return 'Hobby & Supplies';
 }
 
+// A filter "entry" is a drawer row: it carries its own display label, the
+// unique id used for is-active tracking + the result chip, which real
+// category slug to match against product cards, and an optional name
+// prefix for splitting one Loyverse category into multiple entries.
+type FilterEntry = { label: string; filter: string; categoryMatch: string; namePrefix?: string };
+
+const CATEGORY_LABEL_OVERRIDES: Record<string, string> = {
+  "ADEPTUS / LEGIO CUSTODES": "Adeptus Custodes",
+};
+
 const GROUP_ORDER = ['Warhammer 40,000', 'Age of Sigmar', 'The Horus Heresy', 'Other Games', 'Hobby & Supplies'];
-const groupsMap = new Map(GROUP_ORDER.map((label) => [label, [] as string[]]));
+const groupsMap = new Map(GROUP_ORDER.map((label) => [label, [] as FilterEntry[]]));
 for (const category of categories) {
-  groupsMap.get(groupFor(category))!.push(category);
+  const slug = slugify(category);
+  groupsMap.get(groupFor(category))!.push({
+    label: CATEGORY_LABEL_OVERRIDES[category] || category,
+    filter: slug,
+    categoryMatch: slug,
+  });
 }
+
+// Adeptus / Legio Custodes is one Loyverse category spanning two product
+// lines: current "Adeptus Custodes" (40k) and Horus Heresy-era "Legio
+// Custodes". The Adeptus Custodes filter above already covers all of
+// them; this adds a second, narrower entry under Horus Heresy that only
+// matches products actually named "Legio Custodes: ...".
+const custodesSlug = slugify("ADEPTUS / LEGIO CUSTODES");
+if (categories.includes("ADEPTUS / LEGIO CUSTODES")) {
+  groupsMap.get('The Horus Heresy')!.push({
+    label: "Legio Custodes",
+    filter: 'legio-custodes-heresy',
+    categoryMatch: custodesSlug,
+    namePrefix: 'legio custodes',
+  });
+}
+
 const groups = GROUP_ORDER
-  .map((label) => ({ label, slug: slugify(label), categories: groupsMap.get(label)! }))
-  .filter((g) => g.categories.length > 0);
+  .map((label) => ({ label, slug: slugify(label), entries: groupsMap.get(label)! }))
+  .filter((g) => g.entries.length > 0);
 ---
 <BaseLayout title="Products — Goblin's Lair">
 
@@ -87,15 +118,20 @@ const groups = GROUP_ORDER
             {groups.map((group) => (
               <button class="filter-drawer-item filter-drawer-group" data-group={group.slug} data-label={group.label}>
                 {group.label}
-                <span class="filter-drawer-count">{group.categories.length}</span>
+                <span class="filter-drawer-count">{group.entries.length}</span>
                 <span class="filter-drawer-chevron">&rsaquo;</span>
               </button>
             ))}
           </div>
           {groups.map((group) => (
             <div class="filter-drawer-view" data-view={group.slug} hidden>
-              {group.categories.map((category) => (
-                <button class="filter-drawer-item" data-filter={slugify(category)}>{category}</button>
+              {group.entries.map((entry) => (
+                <button
+                  class="filter-drawer-item"
+                  data-filter={entry.filter}
+                  data-category={entry.categoryMatch}
+                  data-name-prefix={entry.namePrefix}
+                >{entry.label}</button>
               ))}
             </div>
           ))}
