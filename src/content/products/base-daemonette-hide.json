@@ -3,7 +3,7 @@
   "description": "",
   "category": "Paints",
   "price": 17,
-  "image": null,
+  "image": "https://api.loyverse.com/image/9e8e89d6-852b-4a6f-a575-a798fc0f6521",
   "sku": "9918995027006",
   "stock": 6
 }
