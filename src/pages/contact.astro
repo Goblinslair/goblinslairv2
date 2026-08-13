@@ -34,24 +34,34 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <textarea id="message" placeholder="What can we find for you?"></textarea>
         </div>
         <button type="submit" class="btn btn-primary" style="justify-self:start;">Send Message</button>
+        <p class="form-status" role="status" aria-live="polite"></p>
       </form>
 
       <div class="contact-info">
         <div class="contact-info-block">
           <strong>Email</strong>
-          <p>hello@goblinslair.shop</p>
+          <p>goblinslairpj@gmail.com</p>
         </div>
         <div class="contact-info-block">
           <strong>Hours</strong>
-          <p>Tue–Sun, 11am–7pm<br>Closed Mondays</p>
+          <p>Wed–Fri, 1:30pm–8:30pm<br>Sat–Sun, 12:30pm–9pm<br>Closed Mon &amp; Tue</p>
         </div>
         <div class="contact-info-block">
           <strong>Location</strong>
-          <p>The Old Hollow Market<br>Unit 4, Petaling Jaya</p>
+          <p>84A, Jalan SS 24/2, Taman Megah<br>47301 Petaling Jaya, Selangor</p>
         </div>
-        <div class="contact-map"></div>
+        <iframe
+          class="contact-map"
+          src="https://maps.google.com/maps?q=84A+Jalan+SS+24%2F2+Taman+Megah+47301+Petaling+Jaya+Selangor&output=embed"
+          title="Map to Goblin's Lair"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+        <a href="https://maps.app.goo.gl/ps52aJBpJMBxz3GS7" target="_blank" rel="noopener noreferrer" class="blog-link">View on Google Maps &rarr;</a>
       </div>
     </div>
   </section>
 
 </BaseLayout>
+
+<script src="/contact-form.js" is:inline></script>
