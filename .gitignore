@@ -4,3 +4,5 @@ dist/
 .vercel/
 .env
 .env.*
+scripts/paint-image-sync-report.json
+scripts/paint-image-fallback-state.json

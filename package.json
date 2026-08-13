@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "sync-products": "node scripts/sync-products.mjs"
+    "sync-products": "node scripts/sync-products.mjs",
+    "sync-paint-images": "node scripts/sync-paint-images.mjs"
   },
   "dependencies": {
     "@astrojs/vercel": "^9.0.5",
