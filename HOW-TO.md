@@ -1,7 +1,7 @@
 # How to update the site
 
-Three common jobs: swap a hero photo, swap a diamond photo, add a blog post.
-All three are just adding or replacing files — no code to edit.
+Four common jobs: swap a hero photo, swap a diamond photo, add a blog post,
+add an event. All four are just adding or replacing files — no code to edit.
 
 After any change: commit and push. The site rebuilds and goes live on its own.
 
@@ -65,6 +65,35 @@ build if any are missing or misspelled. Date format is `YYYY-MM-DD`.
 
 That's it. The post page is created automatically and appears on the blog
 listing, newest first. Older posts roll onto page 2, page 3, and so on.
+
+## 4. Add an event
+
+1. Go to the folder `src/content/events/`.
+2. Create a new file ending in `.md`. Name doesn't matter much — lowercase
+   words with dashes, no spaces, e.g. `escalation-league-night.md`.
+3. Paste this at the top of the file and fill it in:
+
+```
+---
+title: "Your Event Title"
+date: 2026-09-05
+excerpt: "One-line summary shown in the events list."
+---
+```
+
+The three lines between the `---` marks are required, same rules as a blog
+post. Date format is `YYYY-MM-DD`.
+
+That's it. The homepage events section shows up to four *upcoming* events,
+soonest first, and picks the soonest as the featured card automatically.
+
+**If no events are booked for the future**, the section doesn't disappear —
+it automatically switches to showing your four most recent past events
+instead, under a "Recently at the Lair" heading, so the homepage never looks
+empty. Nothing to do here — just add a new event with a future date whenever
+you have one, and the section switches back on its own.
+
+To take an event down early (cancelled, full, etc.), just delete its file.
 
 ---
 

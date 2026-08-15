@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getImage } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import type { ImageMetadata } from 'astro';
 
 // Photography lives in src/assets/images/ rather than public/ so Astro's
@@ -44,6 +45,28 @@ const heroSlides = (
 const reasonDiamonds = await Promise.all(
   [1, 2, 3, 4, 5].map((n) => backgroundStyle(`reason-${n}`, 600)),
 );
+
+// Events come from src/content/events/*.md (see HOW-TO.md). Soonest-first,
+// capped at four. If nothing is booked in the future, fall back to the most
+// recent past events instead of showing an empty section.
+const allEvents = (await getCollection('events')).sort(
+  (a, b) => a.data.date.valueOf() - b.data.date.valueOf(),
+);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const upcomingEvents = allEvents.filter((event) => event.data.date >= today);
+const isRecap = upcomingEvents.length === 0;
+const displayEvents = (isRecap ? [...allEvents].reverse() : upcomingEvents).slice(0, 4);
+const featuredEvent = displayEvents[0];
+
+function formatEventDate(date: Date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day} / ${month}`;
+}
+function formatFeaturedDate(date: Date) {
+  return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+}
 ---
 <BaseLayout title="Goblin's Lair — Warhammer &amp; Tabletop Hobby Shop">
 
@@ -105,8 +128,8 @@ const reasonDiamonds = await Promise.all(
         <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[0]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">01</span>
-          <h3>A Table Always Open</h3>
-          <p>Six painting and gaming tables, free to use whenever the shop is open — no booking required.</p>
+          <h3>Built For Hobbying</h3>
+          <p>Six painting tables, five gaming tables. Plenty of room to paint, play, and not get in each other's way.</p>
         </div>
       </div>
 
@@ -114,8 +137,8 @@ const reasonDiamonds = await Promise.all(
         <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={reasonDiamonds[1]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">02</span>
-          <h3>Full Range, Always Stocked</h3>
-          <p>Deep stock across both Warhammer 40,000 and Age of Sigmar, restocked weekly so you're never waiting on a backorder.</p>
+          <h3>Deep Stock, Both Armies</h3>
+          <p>A serious range across Warhammer 40,000 and Age of Sigmar, restocked weekly so there's always something new to grab.</p>
         </div>
       </div>
 
@@ -123,8 +146,8 @@ const reasonDiamonds = await Promise.all(
         <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[2]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">03</span>
-          <h3>Advice From People Who Play</h3>
-          <p>Every keeper behind the counter runs their own army — ask a rules question and you'll get a real answer.</p>
+          <h3>Advice From People Who Actually Play</h3>
+          <p>Everyone behind the counter runs their own army. Ask a rules question, get a real answer.</p>
         </div>
       </div>
 
@@ -132,8 +155,8 @@ const reasonDiamonds = await Promise.all(
         <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={reasonDiamonds[3]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">04</span>
-          <h3>Something On Most Weekends</h3>
-          <p>Painting workshops, narrative campaigns, and new release nights — check the events list below for what's next.</p>
+          <h3>There's Always Something On</h3>
+          <p>Painting workshops, narrative campaigns, new release nights, and weekends where the community just shows up to chill and throw down some games. Check the events list below for what's next.</p>
         </div>
       </div>
 
@@ -141,8 +164,8 @@ const reasonDiamonds = await Promise.all(
         <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[4]}></div></div></div>
         <div class="reason-text">
           <span class="reason-num">05</span>
-          <h3>A Genuine Community</h3>
-          <p>200+ regulars deep and still growing — first-timers get paired with someone happy to show them the ropes.</p>
+          <h3>A Community Worth Joining</h3>
+          <p>New players, veteran generals, and everyone in between — here for casual games, occasional competitive ones, and everything in between. First-timers get paired with someone happy to show them the ropes.</p>
         </div>
       </div>
 
@@ -154,65 +177,43 @@ const reasonDiamonds = await Promise.all(
   </section>
 
   <!-- EVENTS -->
-  <section class="events">
-    <div class="watermark"></div>
-    <div class="events-layout">
+  {displayEvents.length > 0 && (
+    <section class="events">
+      <div class="watermark"></div>
+      <div class="events-layout">
 
-      <div class="events-image" data-parallax="0.06">
-        <div class="events-feature-card">
-          <div class="efc-info">
-            <span>Featured &middot; Aug 08</span>
-            <strong>Saturday Narrative Campaign — Round 4</strong>
+        <div class="events-image" data-parallax="0.06">
+          <div class="events-feature-card">
+            <div class="efc-info">
+              <span>{isRecap ? 'Recap' : 'Featured'} &middot; {formatFeaturedDate(featuredEvent.data.date)}</span>
+              <strong>{featuredEvent.data.title}</strong>
+            </div>
+            {!isRecap && <a href="/blog" class="btn">Reserve Spot</a>}
           </div>
-          <a href="/blog" class="btn">Reserve Spot</a>
         </div>
+
+        <div class="events-list">
+          <div class="section-head">
+            <div class="section-eyebrow">{isRecap ? 'Recap' : 'Events'}</div>
+            <h2>{isRecap ? 'Recently at the Lair' : "What's On at the Lair"}</h2>
+            {isRecap && <p>Nothing booked yet for the weeks ahead — here's what we got up to last.</p>}
+          </div>
+
+          {displayEvents.map((event, i) => (
+            <div class={i === 0 ? 'event-row is-featured' : 'event-row'} data-reveal>
+              <span class="event-date">{formatEventDate(event.data.date)}</span>
+              <div class="event-info">
+                <h3>{event.data.title}</h3>
+                <p>{event.data.excerpt}</p>
+              </div>
+              <a href="/blog" class="event-link">View Details</a>
+            </div>
+          ))}
+        </div>
+
       </div>
-
-      <div class="events-list">
-        <div class="section-head">
-          <div class="section-eyebrow">Events</div>
-          <h2>What's On at the Lair</h2>
-        </div>
-
-        <div class="event-row is-featured" data-reveal>
-          <span class="event-date">08 / 08</span>
-          <div class="event-info">
-            <h3>Saturday Narrative Campaign — Round 4</h3>
-            <p>Open to all skill levels. Lists due by Thursday.</p>
-          </div>
-          <a href="/blog" class="event-link">View Details</a>
-        </div>
-
-        <div class="event-row" data-reveal>
-          <span class="event-date">15 / 08</span>
-          <div class="event-info">
-            <h3>New Release Night: Battletome Launch</h3>
-            <p>First look at the latest Age of Sigmar release.</p>
-          </div>
-          <a href="/blog" class="event-link">View Details</a>
-        </div>
-
-        <div class="event-row" data-reveal>
-          <span class="event-date">22 / 08</span>
-          <div class="event-info">
-            <h3>Beginner Painting Workshop</h3>
-            <p>Basecoats to washes — bring any kit, we supply paint.</p>
-          </div>
-          <a href="/blog" class="event-link">View Details</a>
-        </div>
-
-        <div class="event-row" data-reveal>
-          <span class="event-date">29 / 08</span>
-          <div class="event-info">
-            <h3>Combat Patrol Escalation Night</h3>
-            <p>Start small, grow your force over four weeks.</p>
-          </div>
-          <a href="/blog" class="event-link">View Details</a>
-        </div>
-      </div>
-
-    </div>
-  </section>
+    </section>
+  )}
 
   <!-- FACTION INTRO -->
   <section class="products">
