@@ -8,6 +8,6 @@ export const GET: APIRoute = async ({ cookies }) => {
   const customer = token ? await getSessionCustomer(token) : null;
   return new Response(
     JSON.stringify({ email: customer?.email ?? null, name: customer?.name ?? null }),
-    { status: 200 }
+    { status: 200, headers: { 'Cache-Control': 'no-store' } }
   );
 };
