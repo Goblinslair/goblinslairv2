@@ -74,6 +74,13 @@ const localBusiness = {
           <li><a href="/about" class={isActive('/about') ? 'active' : ''}>About Us</a></li>
           <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>
           <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
+          <li class="nav-account">
+            <a href="/login" class="nav-auth-link nav-cta">Login</a>
+            <div class="nav-dropdown">
+              <a href="/account">My Account</a>
+              <button type="button" class="nav-logout-btn">Logout</button>
+            </div>
+          </li>
         </ul>
       </nav>
       <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -93,6 +100,13 @@ const localBusiness = {
       <li><a href="/about" class={isActive('/about') ? 'active' : ''}>About Us</a></li>
       <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>
       <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
+      <li class="nav-account">
+        <a href="/login" class="nav-auth-link nav-cta">Login</a>
+        <div class="nav-dropdown">
+          <a href="/account">My Account</a>
+          <button type="button" class="nav-logout-btn">Logout</button>
+        </div>
+      </li>
     </ul>
   </div>
 
@@ -111,5 +125,6 @@ const localBusiness = {
   </footer>
 
   <script src="/mobile-menu.js" is:inline></script>
+  <script src="/nav-auth.js" is:inline></script>
 </body>
 </html>

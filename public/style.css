@@ -100,7 +100,7 @@ header{
   color: var(--maroon);
 }
 
-nav ul{ display: flex; gap: 36px; }
+nav ul{ display: flex; align-items: center; gap: 36px; }
 
 nav a{
   font-family: 'Work Sans', sans-serif;
@@ -131,6 +131,83 @@ nav a:hover::after{ transform: scaleX(1); }
 
 nav a.active{ color: var(--brass); }
 nav a.active::after{ transform: scaleX(1); background: var(--brass); }
+
+/* ---------- NAV AUTH (login pill + account dropdown) ---------- */
+.nav-account{ position: relative; }
+
+a.nav-cta{
+  display: inline-block;
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: var(--maroon) !important;
+  color: var(--cream) !important;
+  font-family: 'Althea', serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+a.nav-cta::after{ content: none; }
+a.nav-cta:hover{ background: var(--maroon-deep) !important; transform: translateY(-1px); }
+
+.nav-dropdown{
+  display: none;
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 180px;
+  background: var(--cream);
+  border: 1px solid rgba(42,26,18,0.15);
+  border-radius: 6px;
+  box-shadow: 0 12px 28px var(--shadow);
+  padding: 8px;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 50;
+}
+.nav-account.is-open .nav-dropdown{ display: flex; }
+.nav-dropdown a,
+.nav-dropdown button{
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--ink);
+  cursor: pointer;
+}
+.nav-dropdown a:hover,
+.nav-dropdown button:hover{ background: rgba(42,26,18,0.06); color: var(--maroon); }
+
+.mobile-menu .nav-account{ display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.mobile-menu .nav-dropdown{
+  position: static;
+  display: none;
+  background: none;
+  border: none;
+  box-shadow: none;
+  align-items: center;
+  padding: 0;
+  gap: 18px;
+}
+.mobile-menu .nav-account.is-open .nav-dropdown{ display: flex; }
+.mobile-menu .nav-dropdown a,
+.mobile-menu .nav-dropdown button{
+  font-family: 'Althea', serif;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  width: auto;
+  padding: 0;
+}
 
 /* ---------- HAMBURGER (mobile only) ---------- */
 .hamburger{
@@ -969,6 +1046,39 @@ section{ padding: 100px 32px; }
   border-radius: 4px;
   border: 1px solid rgba(42,26,18,0.15);
 }
+
+/* ---------- AUTH (login / signup) ---------- */
+.auth{ background: var(--cream); color: var(--ink); }
+.auth-layout{ max-width: 420px; margin: 0 auto; text-align: left; }
+.auth-switch{ margin-top: 20px; font-size: 0.9rem; color: rgba(42,26,18,0.7); text-align: center; }
+.auth-switch a{ color: var(--brass); }
+
+.account-section{
+  padding: 28px 0;
+  border-bottom: 1px solid rgba(42,26,18,0.12);
+}
+.account-section:first-child{ padding-top: 0; }
+.account-section:last-child{ border-bottom: none; }
+.account-section h3{
+  font-family: 'Althea', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin-bottom: 16px;
+}
+.account-section p{ color: rgba(42,26,18,0.8); font-size: 0.95rem; }
+
+.danger-zone{
+  border: 1px solid rgba(86,14,0,0.3);
+  border-radius: 4px;
+  padding: 20px;
+  margin-top: 8px;
+}
+.danger-zone h3{ color: var(--maroon); }
+.danger-zone p{ margin-bottom: 16px; }
+.danger-zone .btn-outline{ color: var(--maroon); border-color: rgba(86,14,0,0.4); }
+.danger-zone .btn-outline:hover{ background: var(--maroon); color: var(--cream); border-color: var(--maroon); }
 
 /* ---------- FOOTER ---------- */
 footer{

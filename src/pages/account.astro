@@ -1,0 +1,87 @@
+---
+// Server-rendered so it can check the session cookie before showing
+// anything, and so the membership tier lookup (a live Loyverse API call)
+// happens once at request time rather than client-side.
+export const prerender = false;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSessionCustomer, SESSION_COOKIE } from '../lib/auth';
+import { getMembershipTier } from '../lib/loyverse';
+
+const token = Astro.cookies.get(SESSION_COOKIE)?.value;
+const customer = token ? await getSessionCustomer(token) : null;
+
+if (!customer) {
+  return Astro.redirect('/login');
+}
+
+const tier = await getMembershipTier(customer.email);
+---
+<BaseLayout title="My Account — Goblin's Lair">
+  <div class="page-header">
+    <div class="hero-eyebrow">Your Details</div>
+    <h1>My Account</h1>
+    <p>{customer.email}</p>
+  </div>
+  <section class="auth">
+    <div class="auth-layout">
+
+      <div class="account-section">
+        <h3>Profile</h3>
+        <form class="contact-form" id="name-form">
+          <div>
+            <label for="name">Name</label>
+            <input type="text" id="name" value={customer.name} required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="justify-self:start;">Save Name</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="account-section">
+        <h3>Membership</h3>
+        {tier.level ? (
+          <p>Level {tier.level} — {tier.discountPercent}% off in-store.</p>
+        ) : (
+          <p>No membership found for this email — ask staff to confirm this email is on your in-store profile.</p>
+        )}
+      </div>
+
+      <div class="account-section">
+        <h3>Password</h3>
+        <form class="contact-form" id="password-form">
+          <div>
+            <label for="current-password">Current Password</label>
+            <input type="password" id="current-password" placeholder="Current password" required>
+          </div>
+          <div>
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" placeholder="At least 8 characters" required minlength="8">
+          </div>
+          <div>
+            <label for="confirm-new-password">Confirm New Password</label>
+            <input type="password" id="confirm-new-password" placeholder="Retype new password" required minlength="8">
+          </div>
+          <button type="submit" class="btn btn-primary" style="justify-self:start;">Change Password</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="account-section danger-zone">
+        <h3>Danger Zone</h3>
+        <p>Deleting your account removes it permanently. This cannot be undone.</p>
+        <form class="contact-form" id="delete-form">
+          <div>
+            <label for="delete-password">Current Password</label>
+            <input type="password" id="delete-password" placeholder="Confirm your password" required>
+          </div>
+          <button type="submit" class="btn btn-outline" style="justify-self:start;">Delete Account</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<script src="/account-page.js" is:inline></script>
