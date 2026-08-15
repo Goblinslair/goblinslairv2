@@ -45,7 +45,14 @@
 
       if (logoutBtn) {
         logoutBtn.onclick = function () {
-          fetch('/api/logout', { method: 'POST' }).then(function () {
+          // Astro's origin-check middleware 403s same-site POSTs that have no
+          // Content-Type (or a form-like one) — send JSON like every other
+          // fetch call in this codebase to skip that check.
+          fetch('/api/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+          }).then(function () {
             window.location.href = '/';
           });
         };
