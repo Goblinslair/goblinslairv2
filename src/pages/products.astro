@@ -226,6 +226,17 @@ const groups = GROUP_ORDER
           <div class="product-body">
             <h3>{product.data.name}</h3>
             <span class="price">RM{product.data.price.toFixed(2)}</span>
+            {!(product.data.stock !== null && product.data.stock <= 0) && (
+              <button
+                type="button"
+                class="btn btn-primary quick-add-btn"
+                data-slug={product.id}
+                data-name={product.data.name}
+                data-price={product.data.price}
+                data-image={product.data.image ?? ''}
+                data-stock={product.data.stock ?? ''}
+              >Add to Cart</button>
+            )}
           </div>
         </a>
       ))}
@@ -242,3 +253,4 @@ const groups = GROUP_ORDER
 </BaseLayout>
 
 <script src="/product-filter.js" is:inline></script>
+<script src="/product-grid-cart.js" is:inline></script>

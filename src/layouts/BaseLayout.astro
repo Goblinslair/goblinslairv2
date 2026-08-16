@@ -74,6 +74,7 @@ const localBusiness = {
           <li><a href="/about" class={isActive('/about') ? 'active' : ''}>About Us</a></li>
           <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>
           <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
+          <li><a href="/cart" class={`nav-cart-link ${isActive('/cart') ? 'active' : ''}`}>Cart<span class="cart-badge" hidden>0</span></a></li>
           <li class="nav-account">
             <a href="/login" class="nav-auth-link nav-cta">Login</a>
             <div class="nav-dropdown">
@@ -100,6 +101,7 @@ const localBusiness = {
       <li><a href="/about" class={isActive('/about') ? 'active' : ''}>About Us</a></li>
       <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>
       <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
+      <li><a href="/cart" class={`nav-cart-link ${isActive('/cart') ? 'active' : ''}`}>Cart<span class="cart-badge" hidden>0</span></a></li>
       <li class="nav-account">
         <a href="/login" class="nav-auth-link nav-cta">Login</a>
         <div class="nav-dropdown">
@@ -126,5 +128,6 @@ const localBusiness = {
 
   <script src="/mobile-menu.js" is:inline></script>
   <script src="/nav-auth.js" is:inline></script>
+  <script src="/cart.js" is:inline></script>
 </body>
 </html>

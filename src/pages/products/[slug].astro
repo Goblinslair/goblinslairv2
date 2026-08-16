@@ -43,6 +43,17 @@ const descriptionText = description ? stripHtml(description) : '';
         {descriptionHtml && <div class="product-description" set:html={descriptionHtml} />}
         {sku && <p class="product-sku">SKU: {sku}</p>}
         {stockLabel && <p class="product-stock">{stockLabel}</p>}
+        {stockLabel !== 'Out of Stock' && (
+          <div class="cart-controls" data-slug={product.id} data-name={name} data-price={price} data-image={image ?? ''} data-stock={stock ?? ''}>
+            <div class="qty-stepper">
+              <button type="button" class="qty-btn" data-qty-decrease aria-label="Decrease quantity">&minus;</button>
+              <input type="number" class="qty-input" value="1" min="1" aria-label="Quantity">
+              <button type="button" class="qty-btn" data-qty-increase aria-label="Increase quantity">&plus;</button>
+            </div>
+            <button type="button" class="btn btn-primary add-to-cart-btn">Add to Cart</button>
+            <a href="/cart" class="btn btn-outline go-to-cart-btn" hidden>Go to Cart &rarr;</a>
+          </div>
+        )}
         <a class="btn" href="/products">&larr; Back to Products</a>
 
       </div>
@@ -62,3 +73,5 @@ const descriptionText = description ? stripHtml(description) : '';
   )}
 
 </BaseLayout>
+
+<script src="/product-detail.js" is:inline></script>
