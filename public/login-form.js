@@ -46,7 +46,10 @@
           return;
         }
         showStatus('success', 'Logged in — redirecting…');
-        window.location.href = '/';
+        var redirect = new URLSearchParams(window.location.search).get('redirect');
+        // Only follow same-site relative paths — never let the query string
+        // send a logged-in session off to an arbitrary external URL.
+        window.location.href = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
       })
       .catch(function () {
         showStatus('error', 'Something went wrong. Please try again.');

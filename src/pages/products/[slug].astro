@@ -43,7 +43,9 @@ const descriptionText = description ? stripHtml(description) : '';
         {descriptionHtml && <div class="product-description" set:html={descriptionHtml} />}
         {sku && <p class="product-sku">SKU: {sku}</p>}
         {stockLabel && <p class="product-stock">{stockLabel}</p>}
-        {stockLabel !== 'Out of Stock' && (
+        {stockLabel === 'Out of Stock' ? (
+          <button type="button" class="btn btn-primary out-of-stock-btn" disabled>Out of Stock</button>
+        ) : (
           <div class="cart-controls" data-slug={product.id} data-name={name} data-price={price} data-image={image ?? ''} data-stock={stock ?? ''}>
             <div class="qty-stepper">
               <button type="button" class="qty-btn" data-qty-decrease aria-label="Decrease quantity">&minus;</button>

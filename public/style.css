@@ -709,7 +709,8 @@ section{ padding: 100px 32px; }
   overflow: hidden;
   transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
   color: inherit;
 }
@@ -768,7 +769,7 @@ section{ padding: 100px 32px; }
   border-radius: 2px;
 }
 
-.product-body{ padding: 24px; }
+.product-body{ padding: 24px; display: flex; flex-direction: column; flex: 1; }
 .product-body h3{ font-size: 1.1rem; margin-bottom: 6px; }
 .product-body .price{
   font-family: 'Althea', serif;
@@ -783,12 +784,36 @@ section{ padding: 100px 32px; }
 .quick-add-btn{
   display: block;
   width: 100%;
-  margin-top: 14px;
   padding: 11px 20px;
   font-size: 0.78rem;
   text-align: center;
 }
 .quick-add-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
+.product-body > .quick-add-btn{ margin-top: auto; }
+
+.quick-add-wrap{ display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+.qty-stepper-sm{
+  align-self: flex-end;
+  width: auto;
+  border: none;
+  gap: 2px;
+}
+.qty-stepper-sm .qty-btn{
+  width: 26px;
+  height: 26px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(42,26,18,0.2);
+  border-radius: 2px;
+  color: rgba(42,26,18,0.6);
+}
+.qty-stepper-sm .qty-btn:hover{ color: var(--maroon); border-color: rgba(42,26,18,0.4); }
+.qty-stepper-sm .qty-input{
+  width: 32px;
+  height: 26px;
+  border: none;
+  font-size: 0.85rem;
+  color: rgba(42,26,18,0.75);
+}
 
 /* ---------- PRODUCT DETAIL ---------- */
 .product-detail{
@@ -855,6 +880,8 @@ section{ padding: 100px 32px; }
 .cart-controls{ display: flex; align-items: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
 .cart-controls .add-to-cart-btn{ padding: 12px 30px; }
 .cart-controls .go-to-cart-btn{ padding: 12px 30px; }
+.out-of-stock-btn{ margin-top: 18px; padding: 12px 30px; }
+.out-of-stock-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
 
 /* ---------- ABOUT ---------- */
 .about{ background: var(--cream); }
@@ -1567,7 +1594,23 @@ footer .footer-links a:hover{ color: var(--brass); }
   gap: 16px;
   align-items: baseline;
   font-family: 'Althea', serif;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
+  color: rgba(42,26,18,0.7);
+}
+.cart-discount-row{
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  font-size: 0.92rem;
+  color: var(--moss);
+}
+.cart-total-row{
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  font-family: 'Althea', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--maroon);
 }
 .cart-note{ color: rgba(42,26,18,0.6); font-size: 0.88rem; max-width: 360px; }

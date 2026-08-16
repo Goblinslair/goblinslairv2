@@ -8,15 +8,25 @@
   }
 
   function refreshButton(btn) {
+    if (!btn.dataset.slug) return; // out-of-stock buttons render disabled, no data to refresh
     var stockRaw = btn.dataset.stock;
     var stock = stockRaw === '' ? null : parseInt(stockRaw, 10);
     var left = remaining(btn.dataset.slug, stock);
+    var wrap = btn.closest('.quick-add-wrap');
+    var qtyInput = wrap ? wrap.querySelector('.qty-input') : null;
+
     if (left <= 0) {
       btn.disabled = true;
       btn.textContent = 'Max in Cart';
+      if (qtyInput) qtyInput.disabled = true;
     } else {
       btn.disabled = false;
       btn.textContent = 'Add to Cart';
+      if (qtyInput) {
+        qtyInput.disabled = false;
+        if (stock !== null) qtyInput.setAttribute('max', String(left));
+        if (parseInt(qtyInput.value, 10) > left || !qtyInput.value) qtyInput.value = '1';
+      }
     }
   }
 
@@ -27,24 +37,53 @@
   // Delegated so it keeps working with product-filter.js's show/hide and
   // load-more, which don't re-render the grid markup.
   document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.quick-add-btn');
-    if (!btn) return;
+    var decBtn = e.target.closest('.quick-add-wrap [data-qty-decrease]');
+    var incBtn = e.target.closest('.quick-add-wrap [data-qty-increase]');
+    var addBtn = e.target.closest('.quick-add-btn');
+
+    if (decBtn || incBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      var wrap = (decBtn || incBtn).closest('.quick-add-wrap');
+      var qtyInput = wrap.querySelector('.qty-input');
+      var max = qtyInput.getAttribute('max');
+      var val = parseInt(qtyInput.value, 10) || 1;
+      val = decBtn ? Math.max(1, val - 1) : val + 1;
+      if (max !== null) val = Math.min(val, parseInt(max, 10));
+      qtyInput.value = String(val);
+      return;
+    }
+
+    if (!addBtn) return;
     e.preventDefault();
     e.stopPropagation();
-    if (btn.disabled) return;
+    if (addBtn.disabled) return;
 
-    var stockRaw = btn.dataset.stock;
+    var stockRaw = addBtn.dataset.stock;
     var product = {
-      slug: btn.dataset.slug,
-      name: btn.dataset.name,
-      price: parseFloat(btn.dataset.price),
-      image: btn.dataset.image || null,
+      slug: addBtn.dataset.slug,
+      name: addBtn.dataset.name,
+      price: parseFloat(addBtn.dataset.price),
+      image: addBtn.dataset.image || null,
       stock: stockRaw === '' ? null : parseInt(stockRaw, 10),
     };
 
-    window.GLCart.addItem(product, 1);
-    btn.textContent = 'Added!';
-    setTimeout(function () { refreshButton(btn); }, 1000);
+    var wrapForAdd = addBtn.closest('.quick-add-wrap');
+    var qtyForAdd = wrapForAdd ? wrapForAdd.querySelector('.qty-input') : null;
+    var qty = qtyForAdd ? Math.max(1, parseInt(qtyForAdd.value, 10) || 1) : 1;
+
+    window.GLCart.addItem(product, qty);
+    addBtn.textContent = 'Added!';
+    setTimeout(function () { refreshButton(addBtn); }, 1000);
+  });
+
+  document.addEventListener('change', function (e) {
+    var qtyInput = e.target.closest('.quick-add-wrap .qty-input');
+    if (!qtyInput) return;
+    var max = qtyInput.getAttribute('max');
+    var val = parseInt(qtyInput.value, 10) || 1;
+    if (max !== null) val = Math.min(val, parseInt(max, 10));
+    qtyInput.value = String(Math.max(1, val));
   });
 
   window.addEventListener('cart:change', refreshAll);

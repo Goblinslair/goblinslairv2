@@ -3,6 +3,11 @@
   var emptyEl = document.getElementById('cart-empty');
   var summaryEl = document.getElementById('cart-summary');
   var subtotalEl = document.getElementById('cart-subtotal-value');
+  var discountRow = document.getElementById('cart-discount-row');
+  var discountLabelEl = document.getElementById('cart-discount-label');
+  var discountValueEl = document.getElementById('cart-discount-value');
+  var totalEl = document.getElementById('cart-total-value');
+  var discountPercent = parseFloat(summaryEl && summaryEl.dataset.discountPercent) || 0;
   if (!itemsEl || !window.GLCart) return;
 
   function escapeHtml(str) {
@@ -57,6 +62,17 @@
     });
 
     subtotalEl.textContent = 'RM' + subtotal.toFixed(2);
+
+    if (discountPercent > 0) {
+      var discountAmount = subtotal * discountPercent / 100;
+      discountRow.hidden = false;
+      discountLabelEl.textContent = 'Member Discount (' + discountPercent + '%)';
+      discountValueEl.textContent = '-RM' + discountAmount.toFixed(2);
+      totalEl.textContent = 'RM' + (subtotal - discountAmount).toFixed(2);
+    } else {
+      discountRow.hidden = true;
+      totalEl.textContent = 'RM' + subtotal.toFixed(2);
+    }
   }
 
   window.addEventListener('cart:change', render);

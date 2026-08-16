@@ -1,5 +1,17 @@
 ---
+// Server-rendered so the membership discount (a live Loyverse lookup, same
+// as account.astro) can be resolved once at request time and handed to the
+// client as a plain percentage — the cart contents themselves stay in
+// localStorage and are rendered client-side by cart-page.js.
+export const prerender = false;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSessionCustomer, SESSION_COOKIE } from '../lib/auth';
+import { getMembershipTier } from '../lib/loyverse';
+
+const token = Astro.cookies.get(SESSION_COOKIE)?.value;
+const customer = token ? await getSessionCustomer(token) : null;
+const tier = customer ? await getMembershipTier(customer.email) : { level: null, discountPercent: 0 };
 ---
 <BaseLayout title="Your Cart — Goblin's Lair">
 
@@ -12,13 +24,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="cart-items" id="cart-items"></div>
     <p class="cart-empty" id="cart-empty" hidden>Your cart is empty. <a href="/products">Browse the range &rarr;</a></p>
 
-    <div class="cart-summary" id="cart-summary" hidden>
+    <div class="cart-summary" id="cart-summary" hidden data-discount-percent={tier.discountPercent}>
       <div class="cart-subtotal">
         <span>Subtotal</span>
         <span id="cart-subtotal-value">RM0.00</span>
       </div>
-      <p class="cart-note">Online checkout isn't live yet — swing by the shop or reach us via <a href="/contact">Contact</a> to complete your order.</p>
-      <button type="button" class="btn btn-primary" id="cart-checkout-btn" disabled>Checkout (Coming Soon)</button>
+      <div class="cart-discount-row" id="cart-discount-row" hidden>
+        <span id="cart-discount-label">Member Discount</span>
+        <span id="cart-discount-value">-RM0.00</span>
+      </div>
+      <div class="cart-total-row">
+        <span>Total</span>
+        <span id="cart-total-value">RM0.00</span>
+      </div>
+      {customer ? (
+        <>
+          <p class="cart-note">Online checkout isn't live yet — swing by the shop or reach us via <a href="/contact">Contact</a> to complete your order.</p>
+          <button type="button" class="btn btn-primary" id="cart-checkout-btn" disabled>Checkout (Coming Soon)</button>
+        </>
+      ) : (
+        <>
+          <p class="cart-note">Sign in to check out and get your member pricing applied.</p>
+          <a href="/login?redirect=/cart" class="btn btn-primary" id="cart-checkout-btn">Sign In to Checkout</a>
+        </>
+      )}
     </div>
 
     <div class="cart-terms">
