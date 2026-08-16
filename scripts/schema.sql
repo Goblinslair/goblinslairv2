@@ -15,3 +15,9 @@ CREATE TABLE sessions (
   customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
   expires_at TIMESTAMPTZ NOT NULL
 );
+
+CREATE TABLE carts (
+  customer_id INTEGER PRIMARY KEY REFERENCES customers(id) ON DELETE CASCADE,
+  items JSONB NOT NULL DEFAULT '[]',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

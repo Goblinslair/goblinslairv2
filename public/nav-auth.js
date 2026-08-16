@@ -45,6 +45,10 @@
 
       if (logoutBtn) {
         logoutBtn.onclick = function () {
+          // Wipe the local cart immediately — it's this account's cart, not
+          // this browser's, and must not carry over to the next person who
+          // logs in on a shared/kiosk computer.
+          if (window.GLCart) window.GLCart.clear();
           // Astro's origin-check middleware 403s same-site POSTs that have no
           // Content-Type (or a form-like one) — send JSON like every other
           // fetch call in this codebase to skip that check.
@@ -70,8 +74,10 @@
   fetch('/api/me')
     .then(function (res) { return res.json(); })
     .then(function (data) {
-      if (data && data.name) setLoggedIn(data.name);
+      var loggedIn = !!(data && data.name);
+      if (loggedIn) setLoggedIn(data.name);
       else setLoggedOut();
+      window.dispatchEvent(new CustomEvent('gl:auth', { detail: { loggedIn: loggedIn, email: data && data.email } }));
     })
     .catch(function () {});
 })();
