@@ -4,7 +4,10 @@
   var closeBtn = document.querySelector('.mobile-menu-close');
   if (!toggle || !menu) return;
 
-  var menuLinks = menu.querySelectorAll('a');
+  // Exclude the account dropdown trigger — nav-auth.js manages its own
+  // click behavior (toggling the dropdown open/closed), and closing the
+  // whole mobile menu on that click would hide the dropdown before it opens
+  var menuLinks = menu.querySelectorAll('a:not(.nav-auth-link)');
 
   function openMenu() {
     menu.classList.add('is-open');
