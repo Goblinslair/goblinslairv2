@@ -275,6 +275,10 @@ a.nav-cta:hover{ background: var(--maroon-deep) !important; transform: translate
   visibility: hidden;
   transform: translateY(-12px);
   transition: opacity 0.28s var(--ease-out), transform 0.28s var(--ease-out), visibility 0.28s;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 90px 20px 40px;
+  box-sizing: border-box;
 }
 .mobile-menu.is-open{
   opacity: 1;
