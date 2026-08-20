@@ -5,5 +5,6 @@
   "price": 45,
   "image": null,
   "sku": "60249999666",
-  "stock": 3
+  "stock": 3,
+  "variantId": "2ceda102-fc38-4fe0-a469-bc19bead60b5"
 }

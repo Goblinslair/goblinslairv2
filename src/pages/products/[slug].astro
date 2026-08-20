@@ -9,12 +9,22 @@ export const prerender = false;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { sanitizeHtml, stripHtml } from '../../lib/html';
+import { getStoreId, getLiveStockForVariant } from '../../lib/loyverse-stock';
 
 const { slug } = Astro.params;
 const products = await getCollection('products');
 const product = products.find((p) => p.id === slug);
 
 if (!product) Astro.response.status = 404;
+
+// Live stock overlay, same as the product grid — falls back to the synced
+// snapshot's value if the live lookup fails or the product predates the
+// variantId field.
+if (product?.data.variantId) {
+  const storeId = await getStoreId();
+  const liveStock = storeId ? await getLiveStockForVariant(storeId, product.data.variantId) : null;
+  if (liveStock !== null) product.data.stock = liveStock;
+}
 
 const { name, description, category, price, image, sku, stock } = product?.data ?? {};
 const stockLabel = stock === null || stock === undefined ? null : stock <= 0 ? 'Out of Stock' : stock <= 3 ? 'Low Stock' : 'In Stock';

@@ -21,6 +21,7 @@ const products = defineCollection({
     image: z.string().nullable().default(null),
     sku: z.string().nullable().default(null),
     stock: z.number().nullable().default(null),
+    variantId: z.string().nullable().default(null),
   }),
 });
 

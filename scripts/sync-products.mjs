@@ -152,6 +152,7 @@ async function main() {
       image: item.image_url || null,
       sku: variant.sku || null,
       stock: item.track_stock ? (stockByVariantId.get(variant.variant_id) ?? 0) : null,
+      variantId: variant.variant_id || null,
     };
 
     writeFileSync(path.join(outDir, `${slug}.json`), JSON.stringify(product, null, 2));

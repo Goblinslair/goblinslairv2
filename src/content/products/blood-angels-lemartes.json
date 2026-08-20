@@ -5,5 +5,6 @@
   "price": 170,
   "image": "https://api.loyverse.com/image/1df9ec1a-f192-4c03-b5fb-e764364c2b5f",
   "sku": "99120101418",
-  "stock": 0
+  "stock": 0,
+  "variantId": "0d621025-a923-478d-aad9-c7fb4e60ed52"
 }

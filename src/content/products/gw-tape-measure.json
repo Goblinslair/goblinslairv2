@@ -1,9 +1,10 @@
 {
   "name": "GW TAPE MEASURE",
-  "description": "",
+  "description": "A tape measure is needed to measure movement distances and the range of weapons and abilities.</br></br>The Games Workshop Tape Measure extends up to 3 metres (approximately 10 feet), and is marked in both centimetres and inches. It's got an auto-locking feature and a soft rubber exterior, which provides a comfortable grip, and is embossed with the Games Workshop logo.",
   "category": "Accessories",
   "price": 35,
-  "image": null,
+  "image": "https://api.loyverse.com/image/be54b6b1-7792-4138-b3b9-31a09d93ce36",
   "sku": "9923999903503",
-  "stock": 2
+  "stock": 2,
+  "variantId": "51a2f6c8-6f45-484e-b492-759255fb99b4"
 }
