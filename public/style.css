@@ -1150,7 +1150,7 @@ section{ padding: 100px 32px; }
   border-bottom: 1px solid rgba(42,26,18,0.12);
 }
 .account-section:first-child{ padding-top: 0; }
-.account-section:last-child{ border-bottom: none; }
+.account-section:last-child:not(.danger-zone){ border-bottom: none; }
 .account-section h3{
   font-family: 'Althea', serif;
   font-size: 0.78rem;
