@@ -48,8 +48,11 @@
         showStatus('success', 'Logged in — redirecting…');
         var redirect = new URLSearchParams(window.location.search).get('redirect');
         // Only follow same-site relative paths — never let the query string
-        // send a logged-in session off to an arbitrary external URL.
-        window.location.href = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
+        // send a logged-in session off to an arbitrary external URL. Reject
+        // a leading backslash too: browsers normalize "/\evil.com" into
+        // "//evil.com", a protocol-relative URL that bypasses a plain "//" check.
+        var isSafeRedirect = redirect && /^\/(?!\/|\\)/.test(redirect);
+        window.location.href = isSafeRedirect ? redirect : '/';
       })
       .catch(function () {
         showStatus('error', 'Something went wrong. Please try again.');

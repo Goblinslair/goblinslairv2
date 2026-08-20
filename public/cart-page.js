@@ -35,13 +35,24 @@
       var row = document.createElement('div');
       row.className = 'cart-row';
       row.innerHTML =
-        '<div class="cart-row-img" style="' + (item.image ? 'background-image:url(' + item.image + ');background-size:contain;background-repeat:no-repeat;background-position:center;' : '') + '"></div>' +
+        '<div class="cart-row-img"></div>' +
         '<div class="cart-row-body"><h3>' + escapeHtml(item.name) + '</h3><span class="price">RM' + item.price.toFixed(2) + '</span></div>' +
         '<div class="qty-stepper"><button type="button" class="qty-btn" data-decrease aria-label="Decrease quantity">&minus;</button>' +
         '<input type="number" class="qty-input" value="' + item.qty + '" min="1"' + (item.stock !== null && item.stock !== undefined ? ' max="' + item.stock + '"' : '') + ' aria-label="Quantity">' +
         '<button type="button" class="qty-btn" data-increase aria-label="Increase quantity">&plus;</button></div>' +
         '<span class="cart-row-total">RM' + (item.price * item.qty).toFixed(2) + '</span>' +
         '<button type="button" class="cart-row-remove" aria-label="Remove ' + escapeHtml(item.name) + '">&times;</button>';
+
+      // Set via the style property (parsed as CSS, not HTML) rather than
+      // string-building it into the innerHTML above — a raw value there
+      // could break out of the attribute and inject markup.
+      if (item.image) {
+        var imgEl = row.querySelector('.cart-row-img');
+        imgEl.style.backgroundImage = 'url(' + item.image + ')';
+        imgEl.style.backgroundSize = 'contain';
+        imgEl.style.backgroundRepeat = 'no-repeat';
+        imgEl.style.backgroundPosition = 'center';
+      }
 
       var qtyInput = row.querySelector('.qty-input');
       row.querySelector('[data-decrease]').addEventListener('click', function () {
