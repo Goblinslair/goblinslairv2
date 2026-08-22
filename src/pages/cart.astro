@@ -39,6 +39,9 @@ const tier = customer ? await getMembershipTier(customer.email) : { level: null,
       </div>
       {customer ? (
         <>
+          {tier.level === null && (
+            <p class="cart-note">Not one of our goblins yet? Ask in-store to fix that.</p>
+          )}
           <p class="cart-note">Online checkout isn't live yet — swing by the shop or reach us via <a href="/contact">Contact</a> to complete your order.</p>
           <button type="button" class="btn btn-primary" id="cart-checkout-btn" disabled>Checkout (Coming Soon)</button>
         </>

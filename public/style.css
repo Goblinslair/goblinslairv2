@@ -570,9 +570,12 @@ section{ padding: 100px 32px; }
 }
 /* The dropdown's own option list doesn't inherit font-family from the
    select in most browsers, so it falls back to the OS UI font unless set
-   explicitly here. */
+   explicitly here. Work Sans (the site's body font) rather than Althea
+   (the self-hosted display face) — browsers commonly refuse to apply a
+   custom @font-face inside a native <option> list and silently fall back
+   to a generic serif, which is exactly what Althea was doing here. */
 .product-sort option{
-  font-family: 'Althea', serif;
+  font-family: 'Work Sans', sans-serif;
   font-weight: 600;
   color: var(--maroon);
   background: var(--cream);
