@@ -1,8 +1,11 @@
 (function () {
-  var cards = document.querySelectorAll('.product-card');
+  var grid = document.querySelector('.product-grid');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.product-card'));
   var empty = document.querySelector('.product-empty');
   var search = document.getElementById('product-search');
   var loadMoreBtn = document.getElementById('product-load-more');
+  var sortSelect = document.getElementById('product-sort');
+  var hideOosBtn = document.getElementById('hide-out-of-stock');
   if (!cards.length) return;
 
   var BATCH_SIZE = 24;
@@ -12,8 +15,25 @@
   var activeNameContains = '';
   var visibleLimit = BATCH_SIZE;
 
+  // Sorting has to physically reorder the DOM nodes (not just the order we
+  // iterate in below) — the grid lays cards out in DOM order, and Load
+  // More's paging also depends on that same order to decide which batch of
+  // matches to reveal next.
+  function applySort() {
+    var mode = sortSelect ? sortSelect.value : 'default';
+    if (mode === 'default') return;
+
+    var sorted = cards.slice().sort(function (a, b) {
+      var priceA = parseFloat(a.getAttribute('data-price')) || 0;
+      var priceB = parseFloat(b.getAttribute('data-price')) || 0;
+      return mode === 'price-asc' ? priceA - priceB : priceB - priceA;
+    });
+    sorted.forEach(function (card) { grid.appendChild(card); });
+  }
+
   function applyFilters() {
     var query = search ? search.value.trim().toLowerCase() : '';
+    var hideOos = hideOosBtn ? hideOosBtn.getAttribute('aria-pressed') === 'true' : false;
     var matchCount = 0;
     var shownCount = 0;
 
@@ -27,7 +47,10 @@
       var matchesNameContains = !!activeNameContains && cardName.indexOf(activeNameContains) !== -1;
       var matchesFilter = activeFilter === 'all' || (matchesCategory && matchesNamePrefix) || matchesNameContains;
       var matchesSearch = !query || cardName.indexOf(query) !== -1;
-      var isMatch = matchesFilter && matchesSearch;
+      var stock = card.getAttribute('data-stock');
+      var isOutOfStock = stock !== '' && Number(stock) <= 0;
+      var matchesStock = !hideOos || !isOutOfStock;
+      var isMatch = matchesFilter && matchesSearch && matchesStock;
 
       if (!isMatch) {
         card.hidden = true;
@@ -49,6 +72,23 @@
 
   if (search) {
     search.addEventListener('input', function () {
+      visibleLimit = BATCH_SIZE;
+      applyFilters();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function () {
+      visibleLimit = BATCH_SIZE;
+      applySort();
+      applyFilters();
+    });
+  }
+
+  if (hideOosBtn) {
+    hideOosBtn.addEventListener('click', function () {
+      var pressed = hideOosBtn.getAttribute('aria-pressed') === 'true';
+      hideOosBtn.setAttribute('aria-pressed', String(!pressed));
       visibleLimit = BATCH_SIZE;
       applyFilters();
     });

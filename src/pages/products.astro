@@ -176,7 +176,15 @@ const groups = GROUP_ORDER
 
     <div class="product-filter-bar">
       <button id="filter-drawer-open" class="btn btn-outline" type="button" aria-haspopup="dialog">
-        Filter by Faction
+        Filter
+      </button>
+      <select id="product-sort" class="product-sort" aria-label="Sort products">
+        <option value="default">Sort: Featured</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+      </select>
+      <button id="hide-out-of-stock" class="btn btn-outline" type="button" aria-pressed="false">
+        Hide Out of Stock
       </button>
       <div class="active-filter-chip" id="active-filter-chip" hidden>
         <span id="active-filter-chip-text"></span>
@@ -189,7 +197,7 @@ const groups = GROUP_ORDER
       <div class="filter-drawer-panel" role="dialog" aria-modal="true" aria-label="Filter products">
         <div class="filter-drawer-header">
           <button class="filter-drawer-back" id="filter-drawer-back" type="button" aria-label="Back" hidden>&larr;</button>
-          <span class="filter-drawer-title" id="filter-drawer-title">Filter by Faction</span>
+          <span class="filter-drawer-title" id="filter-drawer-title">Filter</span>
           <button class="filter-drawer-close" id="filter-drawer-close" type="button" aria-label="Close">&times;</button>
         </div>
         <div class="filter-drawer-body">
@@ -232,7 +240,7 @@ const groups = GROUP_ORDER
     <div class="product-grid">
 
       {products.map((product) => (
-        <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-name={product.data.name.toLowerCase()}>
+        <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-name={product.data.name.toLowerCase()} data-price={product.data.price} data-stock={product.data.stock ?? ''}>
           <div
             class="product-img"
             style={product.data.image ? `background-image:url(${product.data.image});background-size:contain;background-repeat:no-repeat;background-position:center;` : undefined}

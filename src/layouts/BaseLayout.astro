@@ -1,4 +1,7 @@
 ---
+import { Image } from 'astro:assets';
+import logo from '../assets/images/logo.png';
+
 interface Props {
   title: string;
   description?: string;
@@ -63,10 +66,9 @@ const localBusiness = {
 
   <header>
     <div class="nav-inner">
-      <div class="brand">
-        <div class="seal">GL</div>
-        <span class="brand-name">Goblin's Lair</span>
-      </div>
+      <a href="/" class="brand" aria-label="Goblin's Lair — Home">
+        <Image src={logo} alt="Goblin's Lair" class="brand-logo" width={340} height={113} />
+      </a>
       <nav>
         <ul>
           <li><a href="/" class={isActive('/') ? 'active' : ''}>Home</a></li>

@@ -22,9 +22,9 @@ const imagesByName = new Map<string, ImageMetadata>(
 );
 
 // width is the widest the image is ever displayed at, doubled for high-DPI
-// screens. Diamonds render in a 150px box whose inner layer is 150% of that.
-// Quality is set well below the WebP default: these are decorative background
-// photos, and the default re-encode can land larger than the source JPEG.
+// screens. Quality is set well below the WebP default: these are decorative
+// background photos, and the default re-encode can land larger than the
+// source JPEG.
 async function backgroundStyle(basename: string, width: number) {
   const source = imagesByName.get(basename);
   if (!source) return undefined;
@@ -42,8 +42,8 @@ async function backgroundStyle(basename: string, width: number) {
 const heroSlides = (
   await Promise.all([1, 2, 3, 4, 5].map((n) => backgroundStyle(`hero-${n}`, 1920)))
 ).filter((style): style is string => style !== undefined);
-const reasonDiamonds = await Promise.all(
-  [1, 2, 3, 4, 5].map((n) => backgroundStyle(`reason-${n}`, 600)),
+const reasonImages = await Promise.all(
+  [1, 2, 3, 4, 5].map((n) => backgroundStyle(`reason-${n}`, 1440)),
 );
 
 // Events come from src/content/events/*.md (see HOW-TO.md). Soonest-first,
@@ -90,9 +90,9 @@ function formatFeaturedDate(date: Date) {
     </button>
 
     <div class="hero-content">
-      <div class="hero-eyebrow">Let Us Help You Build</div>
+      <div class="hero-eyebrow">Welcome To Your New Obsession</div>
       <h1>Your Army Starts<br>in the Lair</h1>
-      <p>Miniatures, paints, terrain, and rulebooks for Warhammer 40,000 and Age of Sigmar — stocked, painted, and battle-tested by people who actually play.</p>
+      <p>Miniatures, paints and accessories for Warhammer 40,000 and Age of Sigmar — stocked and battle-tested by people who actually play.</p>
       <a href="/products" class="btn btn-primary">Shop the Range</a>
       <a href="/about" class="btn btn-outline" style="margin-left:16px;">Our Story</a>
     </div>
@@ -125,7 +125,7 @@ function formatFeaturedDate(date: Date) {
     <div class="reasons-collage">
 
       <div class="reason-row" data-reveal>
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[0]}></div></div></div>
+        <div class="reason-img" data-parallax="0.05" style={reasonImages[0]}></div>
         <div class="reason-text">
           <span class="reason-num">01</span>
           <h3>Built For Hobbying</h3>
@@ -133,8 +133,8 @@ function formatFeaturedDate(date: Date) {
         </div>
       </div>
 
-      <div class="reason-row is-reverse" data-reveal>
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={reasonDiamonds[1]}></div></div></div>
+      <div class="reason-row" data-reveal>
+        <div class="reason-img" data-parallax="0.05" style={reasonImages[1]}></div>
         <div class="reason-text">
           <span class="reason-num">02</span>
           <h3>Deep Stock, Both Armies</h3>
@@ -143,7 +143,7 @@ function formatFeaturedDate(date: Date) {
       </div>
 
       <div class="reason-row" data-reveal>
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[2]}></div></div></div>
+        <div class="reason-img" data-parallax="0.05" style={reasonImages[2]}></div>
         <div class="reason-text">
           <span class="reason-num">03</span>
           <h3>Advice From People Who Actually Play</h3>
@@ -151,8 +151,8 @@ function formatFeaturedDate(date: Date) {
         </div>
       </div>
 
-      <div class="reason-row is-reverse" data-reveal>
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.05"><div class="diamond-inner" style={reasonDiamonds[3]}></div></div></div>
+      <div class="reason-row" data-reveal>
+        <div class="reason-img" data-parallax="0.05" style={reasonImages[3]}></div>
         <div class="reason-text">
           <span class="reason-num">04</span>
           <h3>There's Always Something On</h3>
@@ -161,7 +161,7 @@ function formatFeaturedDate(date: Date) {
       </div>
 
       <div class="reason-row" data-reveal>
-        <div class="diamond-wrap"><div class="diamond" data-parallax="0.08"><div class="diamond-inner" style={reasonDiamonds[4]}></div></div></div>
+        <div class="reason-img" data-parallax="0.05" style={reasonImages[4]}></div>
         <div class="reason-text">
           <span class="reason-num">05</span>
           <h3>A Community Worth Joining</h3>

@@ -75,7 +75,10 @@ header{
   margin: 0 auto;
 }
 
-.brand{ display: flex; align-items: center; gap: 12px; }
+.brand{ display: flex; align-items: center; text-decoration: none; }
+.brand::after{ content: none; }
+
+.brand-logo{ height: 44px; width: auto; }
 
 .seal{
   width: 44px;
@@ -91,13 +94,6 @@ header{
   font-size: 1.1rem;
   box-shadow: 0 0 0 3px var(--cream), 0 0 0 4px var(--brass);
   flex-shrink: 0;
-}
-
-.brand-name{
-  font-family: 'Althea', serif;
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--maroon);
 }
 
 nav ul{ display: flex; align-items: center; gap: 36px; }
@@ -499,6 +495,10 @@ body.menu-open{ overflow: hidden; }
   cursor: pointer;
 }
 .btn:active{ transform: scale(0.97); }
+/* .btn sets its own display, which as an author rule beats the browser's
+   built-in [hidden]{display:none} regardless of specificity — without this,
+   a hidden .btn (e.g. Load More, Go to Cart) stays visually shown. */
+.btn[hidden]{ display: none; }
 
 .btn-primary{ background: var(--brass); color: var(--maroon-deep); }
 .btn-primary:hover{ background: transparent; color: var(--brass); }
@@ -553,6 +553,35 @@ section{ padding: 100px 32px; }
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 48px;
+}
+
+.product-sort{
+  font-family: 'Althea', serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--maroon);
+  background: transparent;
+  border: 1px solid rgba(42,26,18,0.35);
+  border-radius: 2px;
+  padding: 16px 38px;
+  cursor: pointer;
+}
+/* The dropdown's own option list doesn't inherit font-family from the
+   select in most browsers, so it falls back to the OS UI font unless set
+   explicitly here. */
+.product-sort option{
+  font-family: 'Althea', serif;
+  font-weight: 600;
+  color: var(--maroon);
+  background: var(--cream);
+}
+
+.products .btn-outline[aria-pressed="true"]{
+  background: var(--maroon);
+  color: var(--cream);
+  border-color: var(--maroon);
 }
 
 .active-filter-chip[hidden]{ display: none; }
@@ -1193,7 +1222,7 @@ footer .footer-links a{ color: rgba(42,26,18,0.7); font-size: 0.82rem; }
 footer .footer-links a:hover{ color: var(--brass); }
 
 /* =====================================================
-   REDESIGN — parallax hero, diamond reasons collage,
+   REDESIGN — parallax hero, reasons collage,
    watermark emblem, events section
    ===================================================== */
 
@@ -1278,7 +1307,7 @@ footer .footer-links a:hover{ color: var(--brass); }
   50%{ opacity: 1; }
 }
 
-/* ---------- REASONS: diamond collage ---------- */
+/* ---------- REASONS ---------- */
 .reasons{
   position: relative;
   overflow: hidden;
@@ -1292,70 +1321,41 @@ footer .footer-links a:hover{ color: var(--brass); }
 
 .reasons-collage{
   position: relative;
-  max-width: 900px;
+  max-width: 720px;
   margin: 0 auto;
   z-index: 1;
-}
-.reasons-collage::before{
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  border-left: 1px dashed rgba(236,234,215,0.2);
 }
 
 .reason-row{
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 40px;
-  padding: 46px 0;
-}
-.reason-row.is-reverse .diamond-wrap{ order: 2; }
-.reason-row.is-reverse .reason-text{ order: 1; text-align: right; }
-
-.diamond-wrap{
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 46px 0;
+  border-bottom: 1px dashed rgba(42,26,18,0.15);
 }
-.diamond{
-  width: 150px;
-  height: 150px;
+.reason-row:last-child{ border-bottom: none; }
+
+.reason-img{
+  width: 100%;
+  aspect-ratio: 16 / 7;
   position: relative;
   overflow: hidden;
-  transform: translateY(var(--parallax-y, 0)) rotate(45deg);
+  transform: translateY(var(--parallax-y, 0));
   border: 3px solid var(--brass);
+  border-radius: 4px;
   box-shadow: 0 18px 30px rgba(0,0,0,0.35);
-  background-color: var(--maroon-deep);
-  will-change: transform;
-}
-
-/* Counter-rotated inner layer: the outer .diamond clips content to its own
-   square box (in local, untransformed space) before the 45° rotation is
-   applied to the whole thing. This inner layer rotates -45° and is
-   oversized, so once the pair is rendered together the photo itself reads
-   as upright inside a diamond-shaped frame instead of rotating with it.
-   Add a real photo per-instance via an inline background-image style —
-   see the matching filenames noted in the markup. */
-.diamond-inner{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 150%;
-  height: 150%;
-  transform: translate(-50%, -50%) rotate(-45deg);
   background-color: var(--maroon-deep);
   background-image: radial-gradient(circle at 30% 25%, rgba(236,234,215,0.16), transparent 60%);
   background-size: cover;
   background-position: center;
+  will-change: transform;
 }
-.reason-row:nth-child(4n+2) .diamond-inner{ background-color: var(--gunmetal); }
-.reason-row:nth-child(4n+3) .diamond-inner{ background-color: var(--moss); }
+.reason-row:nth-child(4n+2) .reason-img{ background-color: var(--gunmetal); }
+.reason-row:nth-child(4n+3) .reason-img{ background-color: var(--moss); }
 
-.reason-text{ max-width: 320px; }
+.reason-text{ max-width: 560px; text-align: center; }
 .reason-text .reason-num{
   font-family: 'Althea', serif;
   color: var(--brass);
@@ -1368,11 +1368,7 @@ footer .footer-links a:hover{ color: var(--brass); }
 .reason-text p{ color: #000; font-size: 0.95rem; }
 
 @media (max-width: 760px){
-  .reason-row{ grid-template-columns: 1fr; text-align: center !important; gap: 20px; }
-  .reason-row .diamond-wrap{ order: 1 !important; }
-  .reason-row .reason-text{ order: 2 !important; text-align: center !important; max-width: 100%; }
-  .reasons-collage::before{ display: none; }
-  .diamond{ width: 120px; height: 120px; }
+  .reason-img{ aspect-ratio: 4 / 3; }
 }
 
 /* ---------- EVENTS (tours-style section) ---------- */
