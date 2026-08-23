@@ -1,5 +1,5 @@
 ---
-title: "Inside Our Saturday Narrative Campaign"
+title: "Saturday Narrative Campaign"
 date: 2026-07-20
 excerpt: "A look at how our in-store campaign runs, from list-building to the final battle report — and how to join for the next round."
 ---
