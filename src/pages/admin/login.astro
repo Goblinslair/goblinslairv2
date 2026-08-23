@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Admin Login — Goblin's Lair">
+  <div class="page-header">
+    <div class="hero-eyebrow">Staff Only</div>
+    <h1>Admin Login</h1>
+  </div>
+  <section class="auth">
+    <div class="auth-layout">
+      <form class="contact-form" id="admin-login-form">
+        <div>
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Admin password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="justify-self:start;">Log In</button>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script src="/admin-login-form.js" is:inline></script>

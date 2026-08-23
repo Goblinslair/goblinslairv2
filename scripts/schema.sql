@@ -21,3 +21,11 @@ CREATE TABLE carts (
   items JSONB NOT NULL DEFAULT '[]',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Single shared admin identity (one site-wide password, see
+-- ADMIN_PASSWORD_HASH) rather than a customer flag, so a valid token here
+-- is sufficient on its own — no admin_id/foreign key needed.
+CREATE TABLE admin_sessions (
+  id TEXT PRIMARY KEY,
+  expires_at TIMESTAMPTZ NOT NULL
+);

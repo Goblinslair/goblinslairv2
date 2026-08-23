@@ -1,0 +1,58 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../../../lib/admin-auth';
+import { getFile } from '../../../../lib/github-content';
+import { parseFrontmatter } from '../../../../lib/markdown';
+
+const token = Astro.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+const isAdmin = token ? await isValidAdminSession(token) : false;
+if (!isAdmin) return Astro.redirect('/admin/login');
+
+const { slug } = Astro.params;
+const file = await getFile(`src/content/events/${slug}.md`);
+if (!file) {
+  Astro.response.status = 404;
+}
+const event = file ? parseFrontmatter(file.content) : null;
+---
+<BaseLayout title="Edit Event — Goblin's Lair">
+  <div class="page-header">
+    <div class="hero-eyebrow">Staff Only</div>
+    <h1>Edit Event</h1>
+  </div>
+  <section class="auth">
+    <div class="auth-layout">
+      {event ? (
+        <>
+          <form class="contact-form" id="admin-events-form" data-mode="edit" data-slug={slug}>
+            <div>
+              <label for="title">Title</label>
+              <input type="text" id="title" required value={event.title}>
+            </div>
+            <div>
+              <label for="date">Date</label>
+              <input type="date" id="date" required value={event.date}>
+            </div>
+            <div>
+              <label for="excerpt">Excerpt</label>
+              <input type="text" id="excerpt" required value={event.excerpt}>
+            </div>
+            <button type="submit" class="btn btn-primary" style="justify-self:start;">Save Changes</button>
+            <p class="form-status" role="status" aria-live="polite"></p>
+          </form>
+          <p class="auth-switch">
+            <button type="button" class="btn btn-outline" id="admin-delete-btn" data-slug={slug} data-kind="events">Delete Event</button>
+          </p>
+        </>
+      ) : (
+        <p>Event not found.</p>
+      )}
+      <p class="auth-switch"><a href="/admin">&larr; Back to Admin</a></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script src="/admin-events-form.js" is:inline></script>
+<script src="/admin-delete.js" is:inline></script>

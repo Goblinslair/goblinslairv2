@@ -1193,6 +1193,21 @@ section{ padding: 100px 32px; }
 }
 .account-section p{ color: rgba(42,26,18,0.8); font-size: 0.95rem; }
 
+.admin-list{ list-style: none; padding: 0; margin-top: 12px; }
+.admin-list li{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(42,26,18,0.1);
+  font-size: 0.9rem;
+}
+.admin-list li:last-child{ border-bottom: none; }
+.admin-list-actions{ display: flex; gap: 14px; flex-shrink: 0; }
+.admin-list-actions a{ color: var(--brass); font-size: 0.85rem; }
+.admin-list-actions a:hover{ color: var(--maroon); }
+
 .danger-zone{
   border: 1px solid rgba(86,14,0,0.3);
   border-radius: 4px;
