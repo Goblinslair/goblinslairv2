@@ -3,10 +3,15 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { sql } from '../../lib/db';
 import { hashPassword, createSession, SESSION_COOKIE } from '../../lib/auth';
+import { checkRateLimit } from '../../lib/rate-limit';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
+  if (!(await checkRateLimit(`signup:${clientAddress}`, 10, 15))) {
+    return new Response(JSON.stringify({ error: 'Too many attempts. Please try again in a few minutes.' }), { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   const password = typeof body?.password === 'string' ? body.password : '';

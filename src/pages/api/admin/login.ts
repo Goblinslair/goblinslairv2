@@ -2,8 +2,15 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { verifyAdminPassword, createAdminSession, ADMIN_SESSION_COOKIE } from '../../../lib/admin-auth';
+import { checkRateLimit } from '../../../lib/rate-limit';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
+  // Stricter than the customer login limit — this single shared password
+  // gates GitHub commit access and Blob write access for the whole site.
+  if (!(await checkRateLimit(`admin-login:${clientAddress}`, 5, 15))) {
+    return new Response(JSON.stringify({ error: 'Too many attempts. Please try again in a few minutes.' }), { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const password = typeof body?.password === 'string' ? body.password : '';
 

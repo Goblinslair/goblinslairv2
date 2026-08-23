@@ -3,14 +3,19 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { sql } from '../../lib/db';
 import { verifyPassword, createSession, SESSION_COOKIE } from '../../lib/auth';
+import { checkRateLimit } from '../../lib/rate-limit';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   const password = typeof body?.password === 'string' ? body.password : '';
 
   const invalid = () =>
     new Response(JSON.stringify({ error: 'Incorrect email or password.' }), { status: 401 });
+
+  if (!(await checkRateLimit(`login:${clientAddress}`, 10, 15))) {
+    return new Response(JSON.stringify({ error: 'Too many attempts. Please try again in a few minutes.' }), { status: 429 });
+  }
 
   if (!email || !password) return invalid();
 

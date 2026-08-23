@@ -29,3 +29,13 @@ CREATE TABLE admin_sessions (
   id TEXT PRIMARY KEY,
   expires_at TIMESTAMPTZ NOT NULL
 );
+
+-- Fixed-window counter shared by the login/signup/admin-login routes (see
+-- src/lib/rate-limit.ts) — one row per (route, client IP), reset once the
+-- window expires. A DB table rather than in-memory state because Vercel
+-- serverless functions don't share memory across instances/regions.
+CREATE TABLE rate_limits (
+  key TEXT PRIMARY KEY,
+  attempts INTEGER NOT NULL DEFAULT 1,
+  window_start TIMESTAMPTZ NOT NULL DEFAULT now()
+);
