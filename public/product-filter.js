@@ -18,17 +18,21 @@
   // Sorting has to physically reorder the DOM nodes (not just the order we
   // iterate in below) — the grid lays cards out in DOM order, and Load
   // More's paging also depends on that same order to decide which batch of
-  // matches to reveal next.
+  // matches to reveal next. `cards` itself must be reassigned to the sorted
+  // order too, not just the DOM — applyFilters() below decides which of the
+  // first `visibleLimit` matches to reveal by iterating `cards`, so if it
+  // kept walking the original (unsorted) order, a card moved to the front
+  // visually could still land past the cutoff and get hidden.
   function applySort() {
     var mode = sortSelect ? sortSelect.value : 'default';
     if (mode === 'default') return;
 
-    var sorted = cards.slice().sort(function (a, b) {
+    cards = cards.slice().sort(function (a, b) {
       var priceA = parseFloat(a.getAttribute('data-price')) || 0;
       var priceB = parseFloat(b.getAttribute('data-price')) || 0;
       return mode === 'price-asc' ? priceA - priceB : priceB - priceA;
     });
-    sorted.forEach(function (card) { grid.appendChild(card); });
+    cards.forEach(function (card) { grid.appendChild(card); });
   }
 
   function applyFilters() {
