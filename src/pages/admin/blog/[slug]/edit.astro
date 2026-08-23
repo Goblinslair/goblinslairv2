@@ -40,6 +40,11 @@ const post = file ? parseFrontmatter(file.content) : null;
               <input type="text" id="excerpt" required value={post.excerpt}>
             </div>
             <div>
+              <label for="admin-image-input">Add Image</label>
+              <input type="file" id="admin-image-input" accept="image/*">
+              <p id="admin-image-status" role="status" aria-live="polite"></p>
+            </div>
+            <div>
               <label for="body">Body (Markdown)</label>
               <textarea id="body" rows="14" required set:text={post.body}></textarea>
             </div>
@@ -58,5 +63,6 @@ const post = file ? parseFrontmatter(file.content) : null;
   </section>
 </BaseLayout>
 
+<script src="/admin-image-upload.js" is:inline></script>
 <script src="/admin-blog-form.js" is:inline></script>
 <script src="/admin-delete.js" is:inline></script>

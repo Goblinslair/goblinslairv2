@@ -29,6 +29,11 @@ if (!isAdmin) return Astro.redirect('/admin/login');
           <input type="text" id="excerpt" placeholder="One-line summary shown on the blog listing page." required>
         </div>
         <div>
+          <label for="admin-image-input">Add Image</label>
+          <input type="file" id="admin-image-input" accept="image/*">
+          <p id="admin-image-status" role="status" aria-live="polite"></p>
+        </div>
+        <div>
           <label for="body">Body (Markdown)</label>
           <textarea id="body" rows="14" required></textarea>
         </div>
@@ -40,4 +45,5 @@ if (!isAdmin) return Astro.redirect('/admin/login');
   </section>
 </BaseLayout>
 
+<script src="/admin-image-upload.js" is:inline></script>
 <script src="/admin-blog-form.js" is:inline></script>
