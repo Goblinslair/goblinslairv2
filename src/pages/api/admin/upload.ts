@@ -10,7 +10,14 @@ import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../../lib/admin-au
 // reason photography already gets via Astro's build-time image pipeline.
 const MAX_WIDTH = 1600;
 const WEBP_QUALITY = 80;
-const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // guard against pasting in huge raw photos before we even try to resize
+// Body arrives as base64 JSON (see below) rather than multipart/form-data —
+// Astro's default CSRF check (security.checkOrigin) blocks POSTs whose
+// Content-Type is multipart/form-data or urlencoded unless the Origin header
+// lines up exactly right, which real-world proxies/browsers don't always
+// send; every other admin route already avoids this by using JSON bodies.
+// Base64 inflates size ~33%, and Vercel's Node function body limit is
+// 4.5MB, so cap the raw file well under that.
+const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const token = cookies.get(ADMIN_SESSION_COOKIE)?.value;
@@ -18,19 +25,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ error: 'Not signed in.' }), { status: 401 });
   }
 
-  const form = await request.formData().catch(() => null);
-  const file = form?.get('image');
-  if (!(file instanceof File)) {
+  const body = await request.json().catch(() => null);
+  const dataUrl = typeof body?.image === 'string' ? body.image : '';
+  const match = dataUrl.match(/^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$/);
+  if (!match) {
     return new Response(JSON.stringify({ error: 'No image provided.' }), { status: 400 });
   }
-  if (!file.type.startsWith('image/')) {
-    return new Response(JSON.stringify({ error: 'File must be an image.' }), { status: 400 });
-  }
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return new Response(JSON.stringify({ error: 'Image is too large (15MB max).' }), { status: 400 });
+
+  const input = Buffer.from(match[1], 'base64');
+  if (input.length > MAX_UPLOAD_BYTES) {
+    return new Response(JSON.stringify({ error: 'Image is too large (3MB max).' }), { status: 400 });
   }
 
-  const input = Buffer.from(await file.arrayBuffer());
   let resized: Buffer;
   try {
     resized = await sharp(input)

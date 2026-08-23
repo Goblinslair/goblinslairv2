@@ -30,4 +30,12 @@ export default defineConfig({
       customPages: productSlugs.map((slug) => `${site}/products/${slug}`),
     }),
   ],
+  // sharp ships a native .node binary (used by src/pages/api/admin/upload.ts)
+  // that the server bundler can't inline — keep it external so Vercel's file
+  // tracer picks up the real platform binary instead of a broken bundled stub.
+  vite: {
+    ssr: {
+      external: ['sharp'],
+    },
+  },
 });
