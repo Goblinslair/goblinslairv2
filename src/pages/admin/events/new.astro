@@ -28,6 +28,13 @@ if (!isAdmin) return Astro.redirect('/admin/login');
           <label for="excerpt">Excerpt</label>
           <input type="text" id="excerpt" placeholder="One-line summary shown in the events list." required>
         </div>
+        <div>
+          <label for="admin-image-input">Featured Image</label>
+          <input type="file" id="admin-image-input" accept="image/*">
+          <p id="admin-image-status" role="status" aria-live="polite"></p>
+          <img id="admin-image-preview" alt="" hidden style="max-width:240px; margin-top:8px; border-radius:4px;">
+          <input type="hidden" id="image" value="">
+        </div>
         <button type="submit" class="btn btn-primary" style="justify-self:start;">Publish</button>
         <p class="form-status" role="status" aria-live="polite"></p>
       </form>
@@ -36,4 +43,5 @@ if (!isAdmin) return Astro.redirect('/admin/login');
   </section>
 </BaseLayout>
 
+<script src="/admin-image-upload.js" is:inline></script>
 <script src="/admin-events-form.js" is:inline></script>

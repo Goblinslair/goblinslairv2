@@ -17,10 +17,12 @@
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
+    var imageField = form.querySelector('#image');
     var payload = {
       title: form.querySelector('#title').value.trim(),
       date: form.querySelector('#date').value,
-      excerpt: form.querySelector('#excerpt').value.trim()
+      excerpt: form.querySelector('#excerpt').value.trim(),
+      image: imageField ? imageField.value.trim() : ''
     };
     if (mode === 'edit') payload.slug = slug;
 

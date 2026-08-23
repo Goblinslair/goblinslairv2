@@ -1,8 +1,13 @@
 (function () {
   var input = document.getElementById('admin-image-input');
   var textarea = document.getElementById('body');
+  var imageField = document.getElementById('image');
+  var preview = document.getElementById('admin-image-preview');
   var status = document.getElementById('admin-image-status');
-  if (!input || !textarea) return;
+  // Blog posts insert a markdown tag into the body textarea at the cursor;
+  // events have no body field at all, just a single featured-image URL, so
+  // they set a hidden input's value (+ show a preview) instead.
+  if (!input || (!textarea && !imageField)) return;
 
   var MAX_ORIGINAL_BYTES = 25 * 1024 * 1024; // sanity guard before we even try to decode it in-browser
   var MAX_UPLOAD_BYTES = 3 * 1024 * 1024; // must match src/pages/api/admin/upload.ts
@@ -103,8 +108,17 @@
           setStatus(result.data.error || 'Upload failed.');
           return;
         }
-        insertAtCursor('\n\n![](' + result.data.url + ')\n\n');
-        setStatus('Image added to the post below.');
+        if (textarea) {
+          insertAtCursor('\n\n![](' + result.data.url + ')\n\n');
+          setStatus('Image added to the post below.');
+        } else {
+          imageField.value = result.data.url;
+          if (preview) {
+            preview.src = result.data.url;
+            preview.hidden = false;
+          }
+          setStatus('Image set.');
+        }
       })
       .catch(function (err) {
         input.disabled = false;

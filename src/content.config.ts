@@ -32,6 +32,7 @@ const events = defineCollection({
     title: z.string(),
     date: z.date(),
     excerpt: z.string(),
+    image: z.string().nullable().default(null),
   }),
 });
 

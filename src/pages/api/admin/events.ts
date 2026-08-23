@@ -22,6 +22,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const title = typeof body?.title === 'string' ? body.title.trim() : '';
   const date = typeof body?.date === 'string' ? body.date.trim() : '';
   const excerpt = typeof body?.excerpt === 'string' ? body.excerpt.trim() : '';
+  const image = typeof body?.image === 'string' ? body.image.trim() : '';
 
   if (!title || !date || !excerpt) {
     return new Response(JSON.stringify({ error: 'Title, date, and excerpt are all required.' }), { status: 400 });
@@ -35,7 +36,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ error: 'An event with that title already exists.' }), { status: 409 });
   }
 
-  await putFile(path, buildMarkdown({ title, date, excerpt }, ''), `chore: add event "${title}" via admin panel`);
+  await putFile(path, buildMarkdown({ title, date, excerpt, image }, ''), `chore: add event "${title}" via admin panel`);
 
   return new Response(JSON.stringify({ ok: true, slug }), { status: 200 });
 };
@@ -50,6 +51,7 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
   const title = typeof body?.title === 'string' ? body.title.trim() : '';
   const date = typeof body?.date === 'string' ? body.date.trim() : '';
   const excerpt = typeof body?.excerpt === 'string' ? body.excerpt.trim() : '';
+  const image = typeof body?.image === 'string' ? body.image.trim() : '';
 
   if (!slug || !title || !date || !excerpt) {
     return new Response(JSON.stringify({ error: 'Title, date, and excerpt are all required.' }), { status: 400 });
@@ -61,7 +63,7 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ error: 'Event not found.' }), { status: 404 });
   }
 
-  await putFile(path, buildMarkdown({ title, date, excerpt }, ''), `chore: update event "${title}" via admin panel`, existing.sha);
+  await putFile(path, buildMarkdown({ title, date, excerpt, image }, ''), `chore: update event "${title}" via admin panel`, existing.sha);
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
 };

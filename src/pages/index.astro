@@ -182,7 +182,11 @@ function formatFeaturedDate(date: Date) {
       <div class="watermark"></div>
       <div class="events-layout">
 
-        <div class="events-image" data-parallax="0.06">
+        <div
+          class="events-image"
+          data-parallax="0.06"
+          style={featuredEvent.data.image ? `background-image:url(${featuredEvent.data.image});background-size:cover;background-position:center;` : undefined}
+        >
           <div class="events-feature-card">
             <div class="efc-info">
               <span>{isRecap ? 'Recap' : 'Featured'} &middot; {formatFeaturedDate(featuredEvent.data.date)}</span>

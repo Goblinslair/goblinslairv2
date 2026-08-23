@@ -39,6 +39,13 @@ const event = file ? parseFrontmatter(file.content) : null;
               <label for="excerpt">Excerpt</label>
               <input type="text" id="excerpt" required value={event.excerpt}>
             </div>
+            <div>
+              <label for="admin-image-input">Featured Image</label>
+              <input type="file" id="admin-image-input" accept="image/*">
+              <p id="admin-image-status" role="status" aria-live="polite"></p>
+              <img id="admin-image-preview" alt="" hidden={!event.image} src={event.image || undefined} style="max-width:240px; margin-top:8px; border-radius:4px;">
+              <input type="hidden" id="image" value={event.image || ''}>
+            </div>
             <button type="submit" class="btn btn-primary" style="justify-self:start;">Save Changes</button>
             <p class="form-status" role="status" aria-live="polite"></p>
           </form>
@@ -54,5 +61,6 @@ const event = file ? parseFrontmatter(file.content) : null;
   </section>
 </BaseLayout>
 
+<script src="/admin-image-upload.js" is:inline></script>
 <script src="/admin-events-form.js" is:inline></script>
 <script src="/admin-delete.js" is:inline></script>
