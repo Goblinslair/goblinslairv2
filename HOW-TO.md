@@ -1,7 +1,8 @@
 # How to update the site
 
-Four common jobs: swap a hero photo, swap a diamond photo, add a blog post,
-add an event. All four are just adding or replacing files — no code to edit.
+Five common jobs: swap a hero photo, swap a diamond photo, swap a faction
+card photo, add a blog post, add an event. All five are just adding or
+replacing files — no code to edit.
 
 After any change: commit and push. The site rebuilds and goes live on its own.
 
@@ -38,7 +39,21 @@ Same folder, different names. Five diamonds, numbered top to bottom.
 Tip: diamonds are cut into a diamond shape, so use a **square** photo with the
 subject in the middle. Anything near the corners gets cut off.
 
-## 3. Add a blog post
+## 3. Change a faction card photo (the "Two Armies, One Lair" section)
+
+The three cards further down the homepage — Warhammer 40,000, Age of Sigmar,
+Paints & Tools — start out as plain colour blocks. Give any of them a real
+photo the same way.
+
+1. Go to `src/assets/images/`.
+2. Put your photo there, named `faction-40k`, `faction-aos`, or
+   `faction-hobby` (`.jpg`, `.jpeg`, or `.png`).
+   - Delete a file to go back to the plain colour block for that card.
+
+Tip: these are wide cards, not square — a landscape photo looks best. It's
+cropped to fill the card, centred, so keep the subject away from the edges.
+
+## 4. Add a blog post
 
 1. Go to the folder `src/content/blog/`.
 2. Create a new file ending in `.md`. The file name becomes the web address —
@@ -66,7 +81,7 @@ build if any are missing or misspelled. Date format is `YYYY-MM-DD`.
 That's it. The post page is created automatically and appears on the blog
 listing, newest first. Older posts roll onto page 2, page 3, and so on.
 
-## 4. Add an event
+## 5. Add an event
 
 1. Go to the folder `src/content/events/`.
 2. Create a new file ending in `.md`. Name doesn't matter much — lowercase

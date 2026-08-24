@@ -47,6 +47,12 @@ const reasonImages = await Promise.all(
   [1, 2, 3, 4, 5].map((n) => backgroundStyle(`reason-${n}`, 1440)),
 );
 
+// FACTION INTRO section cards — same drop-in-a-file-named-X convention,
+// smaller since each is a third-width card rather than a full banner.
+const faction40kImage = await backgroundStyle('faction-40k', 800);
+const factionAosImage = await backgroundStyle('faction-aos', 800);
+const factionHobbyImage = await backgroundStyle('faction-hobby', 800);
+
 // Events come from src/content/events/*.md (see HOW-TO.md). Soonest-first,
 // capped at four. If nothing is booked in the future, fall back to the most
 // recent past events instead of showing an empty section.
@@ -229,7 +235,7 @@ function formatFeaturedDate(date: Date) {
     </div>
     <div class="product-grid">
       <div class="product-card">
-        <div class="product-img faction-40k"><div class="product-tag">40K</div></div>
+        <div class="product-img faction-40k" style={faction40kImage ? `${faction40kImage}background-size:cover;background-position:center;` : undefined}><div class="product-tag">40K</div></div>
         <div class="product-body">
           <h3>Warhammer 40,000</h3>
           <p>Infantry squads, war machines, and full battleforce boxes for the grim darkness of the far future.</p>
@@ -237,7 +243,7 @@ function formatFeaturedDate(date: Date) {
         </div>
       </div>
       <div class="product-card">
-        <div class="product-img faction-aos"><div class="product-tag">AoS</div></div>
+        <div class="product-img faction-aos" style={factionAosImage ? `${factionAosImage}background-size:cover;background-position:center;` : undefined}><div class="product-tag">AoS</div></div>
         <div class="product-body">
           <h3>Age of Sigmar</h3>
           <p>Realmforged heroes, monsters, and battletomes for the mortal realms.</p>
@@ -245,7 +251,7 @@ function formatFeaturedDate(date: Date) {
         </div>
       </div>
       <div class="product-card">
-        <div class="product-img"><div class="product-tag">Hobby</div></div>
+        <div class="product-img" style={factionHobbyImage ? `${factionHobbyImage}background-size:cover;background-position:center;` : undefined}><div class="product-tag">Hobby</div></div>
         <div class="product-body">
           <h3>Paints &amp; Tools</h3>
           <p>Full paint racks, brushes, bases, and terrain-building supplies to finish the job.</p>
