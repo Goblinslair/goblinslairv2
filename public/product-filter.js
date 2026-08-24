@@ -124,6 +124,7 @@
   var views = drawer ? drawer.querySelectorAll('.filter-drawer-view') : [];
   var leafButtons = drawer ? drawer.querySelectorAll('.filter-drawer-item[data-filter]') : [];
   var groupButtons = drawer ? drawer.querySelectorAll('.filter-drawer-group[data-group]') : [];
+  var systemButtons = drawer ? drawer.querySelectorAll('.filter-drawer-item[data-system-filter]') : [];
   var chip = document.getElementById('active-filter-chip');
   var chipText = document.getElementById('active-filter-chip-text');
   var chipClear = document.getElementById('active-filter-chip-clear');
@@ -165,6 +166,7 @@
     leafButtons.forEach(function (btn) {
       btn.classList.toggle('is-active', btn.getAttribute('data-filter') === filterValue);
     });
+    systemButtons.forEach(function (btn) { btn.classList.remove('is-active'); });
 
     if (chip && chipText) {
       if (filterValue === 'all') {
@@ -179,8 +181,9 @@
   }
 
   // Landing via a homepage "Shop 40K/AoS/Hobby" link (/products?system=slug)
-  // pre-applies that game system as the active filter — same chip/clear UI
-  // as picking one by hand, just bootstrapped from the URL instead.
+  // or picking "All Warhammer 40,000"/etc. in the drawer pre-applies that
+  // whole game system as the active filter — same chip/clear UI as picking
+  // one category by hand.
   function setSystemFilter(systemSlug, label) {
     activeFilter = 'system:' + systemSlug;
     activeCategoryMatch = '';
@@ -188,6 +191,11 @@
     activeNameContains = '';
     activeSystem = systemSlug;
     visibleLimit = BATCH_SIZE;
+
+    leafButtons.forEach(function (btn) { btn.classList.remove('is-active'); });
+    systemButtons.forEach(function (btn) {
+      btn.classList.toggle('is-active', btn.getAttribute('data-system-filter') === systemSlug);
+    });
 
     if (chip && chipText) {
       chipText.textContent = label;
@@ -222,6 +230,13 @@
         btn.getAttribute('data-name-prefix'),
         btn.getAttribute('data-name-contains')
       );
+      closeDrawer();
+    });
+  });
+
+  systemButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setSystemFilter(btn.getAttribute('data-system-filter'), btn.textContent.trim().replace(/^All /, ''));
       closeDrawer();
     });
   });

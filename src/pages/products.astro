@@ -186,6 +186,7 @@ const groups = GROUP_ORDER
           </div>
           {groups.map((group) => (
             <div class="filter-drawer-view" data-view={group.slug} hidden>
+              <button class="filter-drawer-item filter-drawer-item-all" data-system-filter={group.slug}>All {group.label}</button>
               {group.entries.map((entry) => (
                 <button
                   class="filter-drawer-item"
