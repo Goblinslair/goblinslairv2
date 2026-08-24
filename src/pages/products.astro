@@ -8,14 +8,7 @@ export const prerender = false;
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { getStoreId, getLiveStockMap } from '../lib/loyverse-stock';
-
-function slugify(name: string) {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
+import { slugify, groupFor, GROUP_ORDER } from '../lib/product-groups';
 
 // Loyverse category names arrive SHOUTING ("ADEPTA SORORITAS") — capitalize
 // each word for the filter drawer instead of showing raw all-caps. Splits
@@ -45,34 +38,6 @@ if (liveStock) {
 }
 
 const categories = [...new Set(products.map((p) => p.data.category))].sort();
-
-// Loyverse gives us a flat category per product — group them into game
-// systems here so the filter drawer can mirror GW's own site structure.
-// Anything not named below (new Loyverse categories, etc.) safely falls
-// into "Hobby & Supplies" rather than disappearing from the filter.
-const FORTY_K = new Set([
-  "ADEPTA SORORITAS", "ADEPTUS / LEGIO CUSTODES", "ADEPTUS MECHANICUS", "AELDARI", "ASTRA MILITARUM",
-  "BLACK TEMPLARS", "BLOOD ANGELS", "CHAOS SPACE MARINES", "DARK ANGELS", "DEATH GUARD", "DEATHWATCH",
-  "DRUKHARI", "EMPEROR'S CHILDREN", "GENESTEALER CULTS", "IMPERIAL FISTS", "IMPERIAL KNIGHTS", "IRON HANDS",
-  "LEAGUES OF VOTANN", "NECRONS", "ORKS", "SALAMANDERS", "SPACE MARINES", "SPACE WOLVES", "T'AU EMPIRE",
-  "THOUSAND SONS", "TYRANIDS", "ULTRAMARINES", "WHITE SCARS", "WORLD EATERS",
-]);
-const AGE_OF_SIGMAR = new Set([
-  "BLADES OF KHORNE", "CITIES OF SIGMAR", "DAUGHTERS OF KHAINE", "DISCIPLES OF TZEENTCH", "GLOOMSPITE GITZ",
-  "HEDONITES OF SLAANESH", "HELSMITHS OF HASHUT", "IDONETH DEEPKIN", "KHARADRON OVERLORDS", "LUMINETH REALM-LORDS",
-  "MAGGOTKIN OF NURGLE", "NIGHTHAUNT", "ORRUK WARCLANS", "OSSIARCH BONEREAPERS", "SERAPHON", "SKAVEN",
-  "SLAVES TO DARKNESS", "SOULBLIGHT GRAVELORDS", "STORMCAST ETERNALS", "SYLVANETH",
-]);
-const HORUS_HERESY = new Set(["HORUS HERESY: LEGIONES ASTARTES"]);
-const OTHER_GAMES = new Set(["NECROMUNDA", "BLOOD BOWL"]);
-
-function groupFor(category: string) {
-  if (FORTY_K.has(category)) return 'Warhammer 40,000';
-  if (AGE_OF_SIGMAR.has(category)) return 'Age of Sigmar';
-  if (HORUS_HERESY.has(category)) return 'The Horus Heresy';
-  if (OTHER_GAMES.has(category)) return 'Other Games';
-  return 'Hobby & Supplies';
-}
 
 // A filter "entry" is a drawer row: it carries its own display label, the
 // unique id used for is-active tracking + the result chip, which real
@@ -110,7 +75,6 @@ const ROOT_CATEGORY_NAME_CONTAINS: Record<string, string> = {
 
 const rootEntries: FilterEntry[] = [];
 
-const GROUP_ORDER = ['Warhammer 40,000', 'Age of Sigmar', 'The Horus Heresy', 'Other Games', 'Hobby & Supplies'];
 const groupsMap = new Map(GROUP_ORDER.map((label) => [label, [] as FilterEntry[]]));
 for (const category of categories) {
   const slug = slugify(category);
@@ -240,7 +204,7 @@ const groups = GROUP_ORDER
     <div class="product-grid">
 
       {products.map((product) => (
-        <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-name={product.data.name.toLowerCase()} data-price={product.data.price} data-stock={product.data.stock ?? ''}>
+        <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-system={slugify(groupFor(product.data.category))} data-name={product.data.name.toLowerCase()} data-price={product.data.price} data-stock={product.data.stock ?? ''}>
           <div
             class="product-img"
             style={product.data.image ? `background-image:url(${product.data.image});background-size:contain;background-repeat:no-repeat;background-position:center;` : undefined}

@@ -13,6 +13,7 @@
   var activeCategoryMatch = '';
   var activeNamePrefix = '';
   var activeNameContains = '';
+  var activeSystem = '';
   var visibleLimit = BATCH_SIZE;
 
   // Sorting has to physically reorder the DOM nodes (not just the order we
@@ -49,7 +50,12 @@
       // (e.g. "Spearhead: Blades of Khorne...") without removing them
       // from their own category's filter — it never excludes results.
       var matchesNameContains = !!activeNameContains && cardName.indexOf(activeNameContains) !== -1;
-      var matchesFilter = activeFilter === 'all' || (matchesCategory && matchesNamePrefix) || matchesNameContains;
+      // A "system" filter (arrived via a homepage /products?system=... link)
+      // matches on the card's whole game-system group rather than one
+      // specific category — its own alternative alongside the normal
+      // category/name-prefix/name-contains checks above.
+      var matchesSystem = !!activeSystem && card.getAttribute('data-system') === activeSystem;
+      var matchesFilter = activeFilter === 'all' || (matchesCategory && matchesNamePrefix) || matchesNameContains || matchesSystem;
       var matchesSearch = !query || cardName.indexOf(query) !== -1;
       var stock = card.getAttribute('data-stock');
       var isOutOfStock = stock !== '' && Number(stock) <= 0;
@@ -153,6 +159,7 @@
     activeCategoryMatch = categoryMatch || filterValue;
     activeNamePrefix = namePrefix || '';
     activeNameContains = nameContains || '';
+    activeSystem = '';
     visibleLimit = BATCH_SIZE;
 
     leafButtons.forEach(function (btn) {
@@ -166,6 +173,25 @@
         chipText.textContent = label;
         chip.hidden = false;
       }
+    }
+
+    applyFilters();
+  }
+
+  // Landing via a homepage "Shop 40K/AoS/Hobby" link (/products?system=slug)
+  // pre-applies that game system as the active filter — same chip/clear UI
+  // as picking one by hand, just bootstrapped from the URL instead.
+  function setSystemFilter(systemSlug, label) {
+    activeFilter = 'system:' + systemSlug;
+    activeCategoryMatch = '';
+    activeNamePrefix = '';
+    activeNameContains = '';
+    activeSystem = systemSlug;
+    visibleLimit = BATCH_SIZE;
+
+    if (chip && chipText) {
+      chipText.textContent = label;
+      chip.hidden = false;
     }
 
     applyFilters();
@@ -204,5 +230,11 @@
     chipClear.addEventListener('click', function () {
       setActiveFilter('all', '');
     });
+  }
+
+  var systemParam = new URLSearchParams(window.location.search).get('system');
+  if (systemParam) {
+    var groupBtn = drawer.querySelector('.filter-drawer-group[data-group="' + systemParam + '"]');
+    setSystemFilter(systemParam, groupBtn ? groupBtn.getAttribute('data-label') : systemParam);
   }
 })();

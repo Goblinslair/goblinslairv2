@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import type { ImageMetadata } from 'astro';
+import { slugify } from '../lib/product-groups';
 
 // Photography lives in src/assets/images/ rather than public/ so Astro's
 // image pipeline can resize and re-encode it at build time. Drop a file in
@@ -232,7 +233,7 @@ function formatFeaturedDate(date: Date) {
         <div class="product-body">
           <h3>Warhammer 40,000</h3>
           <p>Infantry squads, war machines, and full battleforce boxes for the grim darkness of the far future.</p>
-          <a href="/products" class="blog-link" style="margin-top:12px; display:inline-block;">Shop 40K &rarr;</a>
+          <a href={`/products?system=${slugify('Warhammer 40,000')}`} class="blog-link" style="margin-top:12px; display:inline-block;">Shop 40K &rarr;</a>
         </div>
       </div>
       <div class="product-card">
@@ -240,7 +241,7 @@ function formatFeaturedDate(date: Date) {
         <div class="product-body">
           <h3>Age of Sigmar</h3>
           <p>Realmforged heroes, monsters, and battletomes for the mortal realms.</p>
-          <a href="/products" class="blog-link" style="margin-top:12px; display:inline-block;">Shop AoS &rarr;</a>
+          <a href={`/products?system=${slugify('Age of Sigmar')}`} class="blog-link" style="margin-top:12px; display:inline-block;">Shop AoS &rarr;</a>
         </div>
       </div>
       <div class="product-card">
@@ -248,7 +249,7 @@ function formatFeaturedDate(date: Date) {
         <div class="product-body">
           <h3>Paints &amp; Tools</h3>
           <p>Full paint racks, brushes, bases, and terrain-building supplies to finish the job.</p>
-          <a href="/products" class="blog-link" style="margin-top:12px; display:inline-block;">Shop Hobby &rarr;</a>
+          <a href={`/products?system=${slugify('Hobby & Supplies')}`} class="blog-link" style="margin-top:12px; display:inline-block;">Shop Hobby &rarr;</a>
         </div>
       </div>
     </div>
