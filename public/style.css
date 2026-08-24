@@ -320,7 +320,7 @@ a.nav-cta:hover{ background: var(--maroon-deep) !important; transform: translate
 }
 .mobile-menu a.active,
 .mobile-menu a:hover{ color: var(--brass); }
-.mobile-menu .seal{ position: relative; margin-bottom: 6px; }
+.mobile-menu-logo{ height: 48px; width: auto; }
 
 body.menu-open{ overflow: hidden; }
 
