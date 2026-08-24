@@ -1607,6 +1607,11 @@ footer .footer-links a:hover{ color: var(--brass); }
   align-items: flex-end;
   text-align: right;
 }
+/* Same fix as .btn[hidden] above: an author display rule beats the
+   browser's built-in [hidden]{display:none} regardless of specificity —
+   without this, hiding the cart summary when the cart is emptied (see
+   cart-page.js) left the last item's stale subtotal/total visibly showing. */
+.cart-summary[hidden]{ display: none; }
 .cart-subtotal{
   display: flex;
   gap: 16px;
@@ -1622,6 +1627,7 @@ footer .footer-links a:hover{ color: var(--brass); }
   font-size: 0.92rem;
   color: var(--moss);
 }
+.cart-discount-row[hidden]{ display: none; }
 .cart-total-row{
   display: flex;
   gap: 16px;
