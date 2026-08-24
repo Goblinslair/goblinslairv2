@@ -1228,7 +1228,7 @@ footer{
   font-size: 0.85rem;
   border-top: 1px solid rgba(42,26,18,0.12);
 }
-footer .seal{ margin: 0 auto 16px; }
+.footer-logo{ height: 40px; width: auto; margin: 0 auto 16px; display: block; }
 footer .footer-links{
   display:flex;
   justify-content:center;
