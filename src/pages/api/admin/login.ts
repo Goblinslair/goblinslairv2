@@ -18,13 +18,18 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     return new Response(JSON.stringify({ error: 'Incorrect password.' }), { status: 401 });
   }
 
-  const { token, expiresAt } = await createAdminSession();
+  const { token } = await createAdminSession();
+  // No `expires` — a session cookie the browser drops on full close, so
+  // staff are asked for the password again next time they open the browser,
+  // even though the cookie survives ordinary navigation/tab-switching in
+  // between. The DB-side 7-day expiry (admin-auth.ts) still hard-caps it as
+  // a backstop, since some browsers restore session cookies on "continue
+  // where you left off".
   cookies.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
     secure: import.meta.env.PROD,
     sameSite: 'lax',
     path: '/',
-    expires: expiresAt,
   });
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
