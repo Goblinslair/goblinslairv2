@@ -50,11 +50,15 @@
       // (e.g. "Spearhead: Blades of Khorne...") without removing them
       // from their own category's filter — it never excludes results.
       var matchesNameContains = !!activeNameContains && cardName.indexOf(activeNameContains) !== -1;
-      // A "system" filter (arrived via a homepage /products?system=... link)
-      // matches on the card's whole game-system group rather than one
-      // specific category — its own alternative alongside the normal
-      // category/name-prefix/name-contains checks above.
-      var matchesSystem = !!activeSystem && card.getAttribute('data-system') === activeSystem;
+      // A "system" filter (arrived via a homepage /products?system=... link,
+      // or the drawer's own "All <group>" button) matches on the card's
+      // whole game-system group rather than one specific category — its own
+      // alternative alongside the normal category/name-prefix/name-contains
+      // checks above. data-system is space-separated (a product can belong
+      // to more than one group — see the comment above `systemsFor` in
+      // products.astro), so this checks token membership, not equality.
+      var cardSystems = (card.getAttribute('data-system') || '').split(' ');
+      var matchesSystem = !!activeSystem && cardSystems.indexOf(activeSystem) !== -1;
       var matchesFilter = activeFilter === 'all' || (matchesCategory && matchesNamePrefix) || matchesNameContains || matchesSystem;
       var matchesSearch = !query || cardName.indexOf(query) !== -1;
       var stock = card.getAttribute('data-stock');

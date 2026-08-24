@@ -97,7 +97,7 @@ for (const category of categories) {
 // them; this adds a second, narrower entry under Horus Heresy that only
 // matches products actually named "Legio Custodes: ...".
 const custodesSlug = slugify("ADEPTUS / LEGIO CUSTODES");
-if (categories.includes("ADEPTUS / LEGIO CUSTODES")) {
+if (products.some((p) => /^legio custodes/i.test(p.data.name))) {
   groupsMap.get('The Horus Heresy')!.push({
     label: "Legio Custodes",
     filter: 'legio-custodes-heresy',
@@ -124,6 +124,31 @@ if (products.some((p) => /^combat patrol/i.test(p.data.name))) {
 const groups = GROUP_ORDER
   .map((label) => ({ label, slug: slugify(label), entries: groupsMap.get(label)! }))
   .filter((g) => g.entries.length > 0);
+
+// A product's primary game system is groupFor(category), but it can also
+// surface under a *different* group's own drawer entry — e.g. Legio
+// Custodes products are raw-categorized under 40k (shared with "Adeptus
+// Custodes"), but the drawer deliberately also lists them under Horus
+// Heresy via a narrower name-prefix entry (see the comment above
+// `custodesSlug` below). "All <group>" needs to match everything that
+// group's own entries would surface, not just each product's one primary
+// bucket, or it'd silently show fewer results than the group's own leaf
+// filters do. data-system lists every group a product actually matches,
+// space-separated.
+function systemsFor(product: (typeof products)[number]): string {
+  const categorySlug = slugify(product.data.category);
+  const nameLower = product.data.name.toLowerCase();
+  const systems = new Set([slugify(groupFor(product.data.category))]);
+  for (const group of groups) {
+    const matchesGroup = group.entries.some((entry) => {
+      const matchesCategory = entry.categoryMatch === '*' || categorySlug === entry.categoryMatch;
+      const matchesPrefix = !entry.namePrefix || nameLower.startsWith(entry.namePrefix);
+      return matchesCategory && matchesPrefix;
+    });
+    if (matchesGroup) systems.add(group.slug);
+  }
+  return Array.from(systems).join(' ');
+}
 ---
 <BaseLayout title="Products — Goblin's Lair">
 
@@ -205,7 +230,7 @@ const groups = GROUP_ORDER
     <div class="product-grid">
 
       {products.map((product) => (
-        <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-system={slugify(groupFor(product.data.category))} data-name={product.data.name.toLowerCase()} data-price={product.data.price} data-stock={product.data.stock ?? ''}>
+        <a class="product-card" href={`/products/${product.id}`} data-category={slugify(product.data.category)} data-system={systemsFor(product)} data-name={product.data.name.toLowerCase()} data-price={product.data.price} data-stock={product.data.stock ?? ''}>
           <div
             class="product-img"
             style={product.data.image ? `background-image:url(${product.data.image});background-size:contain;background-repeat:no-repeat;background-position:center;` : undefined}
