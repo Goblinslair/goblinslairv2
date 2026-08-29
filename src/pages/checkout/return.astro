@@ -1,0 +1,77 @@
+---
+// FIUU's Return URL landing page — the browser redirect after paying on
+// FIUU's hosted page. This is spoofable (any query string can be typed
+// into the URL bar), so it never drives fulfillment — the Notification
+// URL webhook (src/pages/api/checkout/fiuu-webhook.ts) already handled
+// that server-to-server before the customer even lands here. This page
+// only reads the order's already-decided status back out of the DB.
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { sql } from '../../lib/db';
+import { getSessionCustomer, SESSION_COOKIE } from '../../lib/auth';
+
+const token = Astro.cookies.get(SESSION_COOKIE)?.value;
+const customer = token ? await getSessionCustomer(token) : null;
+if (!customer) {
+  return Astro.redirect('/login');
+}
+
+const orderId = Astro.url.searchParams.get('orderid') || '';
+const rows = orderId
+  ? await sql<{ status: string; fulfillment_method: 'pickup' | 'delivery' }[]>`
+      SELECT status, fulfillment_method FROM orders WHERE fiuu_orderid = ${orderId} AND customer_id = ${customer.id}
+    `
+  : [];
+const status = rows[0]?.status ?? null;
+const isDelivery = rows[0]?.fulfillment_method === 'delivery';
+---
+<BaseLayout title="Order Status — Goblin's Lair">
+  <div class="page-header">
+    <div class="hero-eyebrow">Click &amp; Collect</div>
+    <h1>Order Status</h1>
+  </div>
+  <section class="auth">
+    <div class="auth-layout">
+      {status === 'paid' || status === 'fulfilled' ? (
+        <div class="account-section">
+          <h3>Payment Received</h3>
+          <p>{isDelivery
+            ? "Thanks! We'll get your order packed and shipped out soon."
+            : "Thanks! We'll have your order ready — swing by the shop to pick it up."}</p>
+          <p><a href="/products" class="btn btn-primary">Continue Shopping</a></p>
+        </div>
+      ) : status === 'pending' || status === 'expired' ? (
+        <div class="account-section">
+          <h3>Confirming Your Payment&hellip;</h3>
+          <p>We're still waiting to hear back from the payment provider. This page doesn't auto-refresh — check back in a minute, or contact us if this doesn't update.</p>
+        </div>
+      ) : status === 'payment_stock_conflict' ? (
+        <div class="account-section">
+          <h3>We Need to Follow Up</h3>
+          <p>Your payment went through, but we hit a stock issue on one item. Our staff will be in touch shortly to sort it out.</p>
+        </div>
+      ) : (
+        <div class="account-section">
+          <h3>Payment Didn't Go Through</h3>
+          <p>Something went wrong with this payment. Nothing was charged for this order.</p>
+          <p><a href="/cart" class="btn btn-primary">Back to Cart</a></p>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+{(status === 'paid' || status === 'fulfilled') && (
+  // Payment succeeded — clear the cart so paid-for items don't still show
+  // as "in cart" (and re-block their own stock via qty caps) on later
+  // visits. GLCart itself also pushes the now-empty cart to the server.
+  <script is:inline>
+    (function () {
+      function clearWhenReady() {
+        if (window.GLCart) { window.GLCart.clear(); } else { setTimeout(clearWhenReady, 50); }
+      }
+      clearWhenReady();
+    })();
+  </script>
+)}

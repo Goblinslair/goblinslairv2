@@ -10,6 +10,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { sanitizeHtml, stripHtml } from '../../lib/html';
 import { getStoreId, getLiveStockForVariant } from '../../lib/loyverse-stock';
+import { getReservedQtyForVariant } from '../../lib/reservations';
 
 const { slug } = Astro.params;
 const products = await getCollection('products');
@@ -24,6 +25,14 @@ if (product?.data.variantId) {
   const storeId = await getStoreId();
   const liveStock = storeId ? await getLiveStockForVariant(storeId, product.data.variantId) : null;
   if (liveStock !== null) product.data.stock = liveStock;
+
+  // Subtract this site's own pending-checkout reservations, same reasoning
+  // as products.astro — a reservation is this site's own DB fact, not
+  // something Loyverse's live stock lookup above would ever reflect.
+  if (product.data.stock !== null) {
+    const reserved = await getReservedQtyForVariant(product.data.variantId);
+    product.data.stock = Math.max(0, product.data.stock - reserved);
+  }
 }
 
 const { name, description, category, price, image, sku, stock } = product?.data ?? {};
@@ -56,7 +65,7 @@ const descriptionText = description ? stripHtml(description) : '';
         {stockLabel === 'Out of Stock' ? (
           <button type="button" class="btn btn-primary out-of-stock-btn" disabled>Out of Stock</button>
         ) : (
-          <div class="cart-controls" data-slug={product.id} data-name={name} data-price={price} data-image={image ?? ''} data-stock={stock ?? ''}>
+          <div class="cart-controls" data-slug={product.id} data-name={name} data-price={price} data-image={image ?? ''} data-stock={stock ?? ''} data-variant-id={product.data.variantId ?? ''}>
             <div class="qty-stepper">
               <button type="button" class="qty-btn" data-qty-decrease aria-label="Decrease quantity">&minus;</button>
               <input type="number" class="qty-input" value="1" min="1" aria-label="Quantity">

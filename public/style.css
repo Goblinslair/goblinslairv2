@@ -1207,6 +1207,39 @@ section{ padding: 100px 32px; }
 .admin-list-actions{ display: flex; gap: 14px; flex-shrink: 0; }
 .admin-list-actions a{ color: var(--brass); font-size: 0.85rem; }
 .admin-list-actions a:hover{ color: var(--maroon); }
+.admin-list-actions button{
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--brass);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.admin-list-actions button:hover{ color: var(--maroon); }
+.admin-list-actions button:disabled{ opacity: 0.5; cursor: default; }
+
+.order-status{
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+.order-status.is-paid{ color: var(--moss); }
+.order-status.is-pending{ color: var(--brass); }
+.order-status.is-cancelled,
+.order-status.is-expired,
+.order-status.is-payment_stock_conflict{ color: var(--maroon); }
+.order-status.is-fulfilled{ color: rgba(42,26,18,0.6); }
+
+.fulfillment-badge{
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--brass);
+}
+.shipping-address{ color: rgba(42,26,18,0.6); font-size: 0.85rem; }
 
 .danger-zone{
   border: 1px solid rgba(86,14,0,0.3);
@@ -1640,6 +1673,26 @@ footer .footer-links a:hover{ color: var(--brass); }
 .cart-note{ color: rgba(42,26,18,0.6); font-size: 0.88rem; max-width: 360px; }
 .cart-note a{ color: var(--maroon); text-decoration: underline; }
 #cart-checkout-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
+
+.fulfillment-options{
+  display: flex;
+  gap: 24px;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 8px;
+  font-size: 0.95rem;
+}
+.fulfillment-option{ display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+.delivery-fields{
+  width: 100%;
+  max-width: 420px;
+  margin-left: auto;
+  margin-top: 8px;
+}
+/* Same fix as .cart-summary[hidden] above — an author display rule beats
+   the browser's built-in [hidden]{display:none}. */
+.delivery-fields[hidden]{ display: none; }
 
 .cart-terms{ margin-top: 56px; padding-top: 32px; border-top: 1px solid rgba(42,26,18,0.12); }
 .cart-terms h3{ font-size: 1.1rem; margin-bottom: 12px; }

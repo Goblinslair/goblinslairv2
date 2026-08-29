@@ -25,6 +25,21 @@ export default defineConfig({
   output: 'static',
   adapter: vercel(),
   site,
+  // Astro's default CSRF check (security.checkOrigin) rejects any
+  // form-content-type POST (x-www-form-urlencoded/multipart/text-plain)
+  // whose Origin header doesn't match this site — and it's global-only,
+  // with no per-route exception. Every other POST route here already
+  // avoids relying on it by using JSON bodies instead (see the comment on
+  // src/pages/api/admin/upload.ts), so this protection currently defends
+  // nothing that isn't already covered another way. It has to be off,
+  // though, because FIUU's payment webhook (src/pages/api/checkout/
+  // fiuu-webhook.ts) is required by FIUU's own spec to POST
+  // x-www-form-urlencoded from their servers — a third party can never
+  // send a matching Origin, so leaving this on would 403 every real
+  // payment confirmation, permanently and silently.
+  security: {
+    checkOrigin: false,
+  },
   integrations: [
     sitemap({
       customPages: productSlugs.map((slug) => `${site}/products/${slug}`),

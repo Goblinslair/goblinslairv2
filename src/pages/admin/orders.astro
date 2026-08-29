@@ -1,0 +1,102 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../lib/admin-auth';
+import { sql } from '../../lib/db';
+
+const token = Astro.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+const isAdmin = token ? await isValidAdminSession(token) : false;
+
+if (!isAdmin) {
+  return Astro.redirect('/admin/login');
+}
+
+interface OrderRow {
+  id: number;
+  status: string;
+  display_status: string;
+  items: { name: string; qty: number }[];
+  total: string;
+  loyverse_receipt_id: string | null;
+  created_at: string;
+  email: string;
+  name: string | null;
+  fulfillment_method: 'pickup' | 'delivery';
+  shipping_address: { line1: string; line2: string | null; city: string; postcode: string; state: string; phone: string } | null;
+}
+
+const statusFilter = Astro.url.searchParams.get('status') || '';
+
+const orders = statusFilter
+  ? await sql<OrderRow[]>`
+      SELECT orders.*, customers.email, customers.name,
+        CASE WHEN status = 'pending' AND reserved_until < now() THEN 'expired' ELSE status END AS display_status
+      FROM orders JOIN customers ON customers.id = orders.customer_id
+      WHERE status = ${statusFilter}
+      ORDER BY created_at DESC LIMIT 200
+    `
+  : await sql<OrderRow[]>`
+      SELECT orders.*, customers.email, customers.name,
+        CASE WHEN status = 'pending' AND reserved_until < now() THEN 'expired' ELSE status END AS display_status
+      FROM orders JOIN customers ON customers.id = orders.customer_id
+      ORDER BY created_at DESC LIMIT 200
+    `;
+---
+<BaseLayout title="Orders — Goblin's Lair Admin">
+  <div class="page-header">
+    <div class="hero-eyebrow">Staff Only</div>
+    <h1>Orders</h1>
+    <a href="/admin" class="btn btn-outline">&larr; Back to Admin</a>
+  </div>
+
+  <section class="auth">
+    <div class="auth-layout">
+      <div class="account-section">
+        <h3>Click &amp; Collect Orders</h3>
+        <ul class="admin-list">
+          {orders.length === 0 && <li><span>No orders yet.</span></li>}
+          {orders.map((order) => (
+            <li>
+              <span>
+                <strong>#{order.id}</strong> — {order.name || order.email} — RM{parseFloat(order.total).toFixed(2)}
+                {' · '}
+                <span class="fulfillment-badge">{order.fulfillment_method === 'delivery' ? 'Delivery' : 'Pickup'}</span>
+                <br />
+                <span class={`order-status is-${order.display_status}`}>{order.display_status}</span>
+                {' · '}
+                {order.items.map((item) => `${item.name} ×${item.qty}`).join(', ')}
+                {order.display_status === 'paid' && !order.loyverse_receipt_id && (
+                  <>{' · '}<span class="order-status is-payment_stock_conflict">no Loyverse receipt yet</span></>
+                )}
+                {order.fulfillment_method === 'delivery' && order.shipping_address && (
+                  <>
+                    <br />
+                    <span class="shipping-address">
+                      {order.shipping_address.line1}{order.shipping_address.line2 ? `, ${order.shipping_address.line2}` : ''}, {order.shipping_address.city} {order.shipping_address.postcode}, {order.shipping_address.state} — {order.shipping_address.phone}
+                    </span>
+                  </>
+                )}
+              </span>
+              <span class="admin-list-actions">
+                {order.display_status === 'paid' && (
+                  <button type="button" class="admin-fulfill-btn" data-order-id={order.id}>
+                    {order.fulfillment_method === 'delivery' ? 'Mark Shipped' : 'Mark Picked Up'}
+                  </button>
+                )}
+                {order.display_status === 'paid' && !order.loyverse_receipt_id && (
+                  <button type="button" class="admin-retry-receipt-btn" data-order-id={order.id}>Retry Receipt</button>
+                )}
+                {(order.display_status === 'expired' || order.status === 'pending') && (
+                  <button type="button" class="admin-reconcile-btn" data-order-id={order.id}>Reconcile</button>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script src="/admin-orders.js" is:inline></script>

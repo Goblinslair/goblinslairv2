@@ -8,6 +8,7 @@ export const prerender = false;
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getSessionCustomer, SESSION_COOKIE } from '../lib/auth';
 import { getMembershipTier } from '../lib/loyverse';
+import { MALAYSIA_STATES } from '../lib/shipping';
 
 const token = Astro.cookies.get(SESSION_COOKIE)?.value;
 const customer = token ? await getSessionCustomer(token) : null;
@@ -33,17 +34,69 @@ const tier = customer ? await getMembershipTier(customer.email) : { level: null,
         <span id="cart-discount-label">Member Discount</span>
         <span id="cart-discount-value">-RM0.00</span>
       </div>
+      <div class="cart-discount-row" id="cart-shipping-row" hidden>
+        <span>Shipping</span>
+        <span id="cart-shipping-value">RM0.00</span>
+      </div>
       <div class="cart-total-row">
         <span>Total</span>
         <span id="cart-total-value">RM0.00</span>
       </div>
+
+      {customer && (
+        <div class="fulfillment-options" id="fulfillment-options">
+          <label class="fulfillment-option">
+            <input type="radio" name="fulfillment-method" id="fulfillment-pickup" value="pickup" checked>
+            Pick Up In-Store
+          </label>
+          <label class="fulfillment-option">
+            <input type="radio" name="fulfillment-method" id="fulfillment-delivery" value="delivery">
+            Delivery
+          </label>
+        </div>
+      )}
+
+      {customer && (
+        <div class="contact-form delivery-fields" id="delivery-fields" hidden>
+          <div>
+            <label for="ship-line1">Address Line 1</label>
+            <input type="text" id="ship-line1" placeholder="Unit/house no., street">
+          </div>
+          <div>
+            <label for="ship-line2">Address Line 2 (optional)</label>
+            <input type="text" id="ship-line2" placeholder="Apartment, building, etc.">
+          </div>
+          <div>
+            <label for="ship-city">City</label>
+            <input type="text" id="ship-city">
+          </div>
+          <div>
+            <label for="ship-postcode">Postcode</label>
+            <input type="text" id="ship-postcode" maxlength="5" inputmode="numeric" placeholder="5 digits">
+          </div>
+          <div>
+            <label for="ship-state">State</label>
+            <select id="ship-state">
+              <option value="">Select a state…</option>
+              {MALAYSIA_STATES.map((s) => (
+                <option value={s.name} data-region={s.region}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="ship-phone">Phone Number</label>
+            <input type="tel" id="ship-phone" placeholder="For the courier">
+          </div>
+        </div>
+      )}
+
       {customer ? (
         <>
           {tier.level === null && (
             <p class="cart-note">Not one of our goblins yet? Ask in-store to fix that.</p>
           )}
-          <p class="cart-note">Online checkout isn't live yet — swing by the shop or reach us via <a href="/contact">Contact</a> to complete your order.</p>
-          <button type="button" class="btn btn-primary" id="cart-checkout-btn" disabled>Checkout (Coming Soon)</button>
+          <p class="cart-note" id="fulfillment-note">Pay online now, pick up in-store — no shipping.</p>
+          <button type="button" class="btn btn-primary" id="cart-checkout-btn">Checkout</button>
         </>
       ) : (
         <>

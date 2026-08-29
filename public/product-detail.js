@@ -11,6 +11,7 @@
     price: parseFloat(controls.dataset.price),
     image: controls.dataset.image || null,
     stock: stock,
+    variantId: controls.dataset.variantId || null,
   };
 
   var qtyInput = controls.querySelector('.qty-input');

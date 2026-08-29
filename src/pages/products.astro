@@ -8,6 +8,7 @@ export const prerender = false;
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { getStoreId, getLiveStockMap } from '../lib/loyverse-stock';
+import { getReservedQtyMap } from '../lib/reservations';
 import { slugify, groupFor, GROUP_ORDER } from '../lib/product-groups';
 
 // Loyverse category names arrive SHOUTING ("ADEPTA SORORITAS") — capitalize
@@ -34,6 +35,21 @@ if (liveStock) {
     if (product.data.variantId && liveStock.has(product.data.variantId)) {
       product.data.stock = liveStock.get(product.data.variantId)!;
     }
+  }
+}
+
+// Subtract this site's own pending-checkout reservations on top of
+// whatever Loyverse itself reports — a second customer's page needs to
+// show reduced availability even though Loyverse's own /inventory hasn't
+// been touched yet (that only happens once a paid order's webhook creates
+// the receipt). This is independent of whether the live-Loyverse overlay
+// above succeeded, since a reservation is this site's own DB fact, not a
+// Loyverse fact.
+const reservedQty = await getReservedQtyMap();
+for (const product of products) {
+  if (product.data.variantId && product.data.stock !== null) {
+    const reserved = reservedQty.get(product.data.variantId) ?? 0;
+    product.data.stock = Math.max(0, product.data.stock - reserved);
   }
 }
 
@@ -265,6 +281,7 @@ function systemsFor(product: (typeof products)[number]): string {
                   data-price={product.data.price}
                   data-image={product.data.image ?? ''}
                   data-stock={product.data.stock ?? ''}
+                  data-variant-id={product.data.variantId ?? ''}
                 >Add to Cart</button>
               </div>
             )}

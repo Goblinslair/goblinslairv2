@@ -55,9 +55,10 @@
     var existing = items.find(function (i) { return i.slug === product.slug; });
     if (existing) {
       existing.stock = product.stock === undefined ? existing.stock : product.stock;
+      existing.variantId = product.variantId === undefined ? existing.variantId : product.variantId;
       existing.qty = Math.min(existing.qty + qty, maxFor(existing.stock));
     } else {
-      items.push({ slug: product.slug, name: product.name, price: product.price, image: product.image || null, stock: product.stock === undefined ? null : product.stock, qty: Math.min(qty, max) });
+      items.push({ slug: product.slug, name: product.name, price: product.price, image: product.image || null, stock: product.stock === undefined ? null : product.stock, variantId: product.variantId || null, qty: Math.min(qty, max) });
     }
     writeCart(items);
   }
@@ -103,7 +104,7 @@
       var stock = local.stock === undefined ? null : local.stock;
       merged.push({
         slug: local.slug, name: local.name, price: local.price, image: local.image || null,
-        stock: stock, qty: Math.min(local.qty, maxFor(stock)),
+        stock: stock, variantId: local.variantId || null, qty: Math.min(local.qty, maxFor(stock)),
       });
     });
     return merged;

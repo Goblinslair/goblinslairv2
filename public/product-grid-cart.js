@@ -66,6 +66,7 @@
       price: parseFloat(addBtn.dataset.price),
       image: addBtn.dataset.image || null,
       stock: stockRaw === '' ? null : parseInt(stockRaw, 10),
+      variantId: addBtn.dataset.variantId || null,
     };
 
     var wrapForAdd = addBtn.closest('.quick-add-wrap');
