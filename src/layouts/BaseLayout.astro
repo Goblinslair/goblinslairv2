@@ -6,8 +6,10 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  jsonLd?: object | object[]; // additional page-specific schema.org blocks, beyond the site-wide LocalBusiness one below
 }
-const { title, description = "Warhammer 40,000 and Age of Sigmar miniatures, paints, and hobby supplies.", image } = Astro.props;
+const { title, description = "Warhammer 40,000 and Age of Sigmar miniatures, paints, and hobby supplies.", image, jsonLd } = Astro.props;
+const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 const path = Astro.url.pathname;
 const canonicalURL = new URL(path, Astro.site);
 
@@ -61,6 +63,9 @@ const localBusiness = {
   <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
   <script type="application/ld+json" set:html={JSON.stringify(localBusiness)} />
+  {jsonLdBlocks.map((block) => (
+    <script type="application/ld+json" set:html={JSON.stringify(block)} />
+  ))}
 </head>
 <body>
 

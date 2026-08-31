@@ -60,7 +60,7 @@ const tier = customer ? await getMembershipTier(customer.email) : { level: null,
         <div class="contact-form delivery-fields" id="delivery-fields" hidden>
           <div>
             <label for="ship-line1">Address Line 1</label>
-            <input type="text" id="ship-line1" placeholder="Unit/house no., street">
+            <input type="text" id="ship-line1" placeholder="Unit/house no., street" required>
           </div>
           <div>
             <label for="ship-line2">Address Line 2 (optional)</label>
@@ -68,15 +68,15 @@ const tier = customer ? await getMembershipTier(customer.email) : { level: null,
           </div>
           <div>
             <label for="ship-city">City</label>
-            <input type="text" id="ship-city">
+            <input type="text" id="ship-city" required>
           </div>
           <div>
             <label for="ship-postcode">Postcode</label>
-            <input type="text" id="ship-postcode" maxlength="5" inputmode="numeric" placeholder="5 digits">
+            <input type="text" id="ship-postcode" maxlength="5" inputmode="numeric" placeholder="5 digits" required>
           </div>
           <div>
             <label for="ship-state">State</label>
-            <select id="ship-state">
+            <select id="ship-state" required>
               <option value="">Select a state…</option>
               {MALAYSIA_STATES.map((s) => (
                 <option value={s.name} data-region={s.region}>{s.name}</option>
@@ -85,7 +85,7 @@ const tier = customer ? await getMembershipTier(customer.email) : { level: null,
           </div>
           <div>
             <label for="ship-phone">Phone Number</label>
-            <input type="tel" id="ship-phone" placeholder="For the courier">
+            <input type="tel" id="ship-phone" placeholder="For the courier" required>
           </div>
         </div>
       )}

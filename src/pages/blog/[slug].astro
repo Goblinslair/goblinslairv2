@@ -16,8 +16,23 @@ const { Content } = await render(post);
 function formatDate(d: Date) {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
+
+// Marks this page as an article for Google (headline/date/description),
+// same "works fine before SITE_URL is set" reasoning as the product page's
+// Product schema. No image field exists on the blog schema (src/content.config.ts
+// only has title/date/excerpt) — image is optional on BlogPosting, so it's
+// just omitted rather than trying to pull one out of the post body.
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  datePublished: post.data.date.toISOString(),
+  description: post.data.excerpt,
+  author: { '@type': 'Organization', name: "Goblin's Lair" },
+  publisher: { '@type': 'Organization', name: "Goblin's Lair" },
+};
 ---
-<BaseLayout title={`${post.data.title} — Goblin's Lair`} description={post.data.excerpt}>
+<BaseLayout title={`${post.data.title} — Goblin's Lair`} description={post.data.excerpt} jsonLd={articleJsonLd}>
 
   <div class="page-header">
     <div class="hero-eyebrow">Dispatch &middot; {formatDate(post.data.date)}</div>

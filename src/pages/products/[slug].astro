@@ -39,11 +39,35 @@ const { name, description, category, price, image, sku, stock } = product?.data 
 const stockLabel = stock === null || stock === undefined ? null : stock <= 0 ? 'Out of Stock' : stock <= 3 ? 'Low Stock' : 'In Stock';
 const descriptionHtml = description ? sanitizeHtml(description) : '';
 const descriptionText = description ? stripHtml(description) : '';
+
+// Lets Google show price/stock directly in search results. Built from
+// data already on this page — no extra fetching. Works fine even before
+// SITE_URL is set for real: Astro.site just carries the placeholder
+// domain until then, same as the canonical tag above already does.
+const productJsonLd = product ? {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name,
+  description: descriptionText || undefined,
+  image: image || undefined,
+  sku: sku || undefined,
+  category,
+  offers: {
+    '@type': 'Offer',
+    url: new URL(Astro.url.pathname, Astro.site).href,
+    priceCurrency: 'MYR',
+    price: price!.toFixed(2),
+    availability: stock !== null && stock !== undefined && stock <= 0
+      ? 'https://schema.org/OutOfStock'
+      : 'https://schema.org/InStock',
+  },
+} : null;
 ---
 <BaseLayout
   title={product ? `${name} — Goblin's Lair` : "Product Not Found — Goblin's Lair"}
   description={product ? (descriptionText || undefined) : undefined}
   image={image || undefined}
+  jsonLd={productJsonLd || undefined}
 >
 
   {product ? (
