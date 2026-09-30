@@ -187,18 +187,14 @@ export async function finalizeOrderPayment(fields: FiuuNotificationFields): Prom
 
 // Staff-triggered reconciliation for a pending/expired order whose FIUU
 // webhook never arrived (src/pages/api/admin/orders.ts's 'reconcile'
-// action) — queries FIUU's Requery API directly rather than waiting on a
-// webhook that may never come. Deliberately staff-triggered rather than an
-// automated poll/cron, matching this codebase's bias against background
-// infra it doesn't strictly need for a handful of stuck orders.
-//
-// Note: unlike finalizeOrderPayment, this does NOT cross-check a webhook
-// `amount` field against the order total — FIUU's Requery response shape
-// wasn't confirmed during planning (see src/lib/fiuu.ts's TODOs), so no
-// amount field is available to check yet. Acceptable for now since this
-// is a manual, low-volume, staff-supervised action, not an automated
-// trust boundary — revisit once the real Requery response shape is
-// confirmed.
+// action) — queries FIUU's "Query by order ID" Requery API directly
+// rather than waiting on a webhook that may never come. Deliberately
+// staff-triggered rather than an automated poll/cron, matching this
+// codebase's bias against background infra it doesn't strictly need for a
+// handful of stuck orders. The order's own amount is signed into the
+// requery request itself (see src/lib/fiuu.ts's requeryTransaction), so a
+// mismatched amount would fail the signature check on FIUU's side rather
+// than needing a separate cross-check here.
 export async function reconcilePendingOrder(orderId: number): Promise<{ ok: boolean; message: string }> {
   const order = await getOrderById(orderId);
   if (!order) return { ok: false, message: 'Order not found.' };
@@ -206,7 +202,7 @@ export async function reconcilePendingOrder(orderId: number): Promise<{ ok: bool
     return { ok: false, message: `Order is already "${order.status}" — nothing to reconcile.` };
   }
 
-  const result = await requeryTransaction(order.fiuu_orderid);
+  const result = await requeryTransaction(order.fiuu_orderid, parseFloat(order.total));
   if (!result.ok) return { ok: false, message: `Could not reach FIUU: ${result.error}` };
 
   if (result.status === 'paid') {

@@ -5,29 +5,31 @@ loadDotEnv();
 
 // FIUU (formerly Razer Merchant Services) — payment gateway for
 // click-and-collect checkout. Isolated in this one file so it's a clean
-// drop-in once real sandbox/production credentials exist (not yet
-// obtained as of this writing — see CLAUDE.md / project memory). Requests
-// are x-www-form-urlencoded, not JSON, per FIUU's own convention — the one
+// drop-in once real sandbox/production credentials exist. Requests are
+// x-www-form-urlencoded, not JSON, per FIUU's own convention — the one
 // deliberate exception to this codebase's usual JSON API bodies.
 //
-// IMPORTANT: the Hosted Payment Page endpoint URL and outbound field names
-// below (buildHostedPagePayload, requeryTransaction) are PLACEHOLDERS —
-// only the Notification URL webhook's inbound fields/signature formula and
-// the Refund API's fields were confirmed against FIUU's docs/cheatsheet
-// during planning. Verify buildHostedPagePayload's endpoint and field
-// names against FIUU's actual Hosted Payment Page integration guide once
-// sandbox credentials exist, before relying on it.
+// Endpoints/field names/signature formulas below are confirmed against
+// FIUU's official "API Specifications for Hosted Payment Page + 3
+// Endpoints + General Operational Functions" doc (v13.97), read directly
+// from github.com/FiuuPayment/Documentation-Fiuu_API_Spec.
 
 function isSandbox(): boolean {
   return (process.env.FIUU_SANDBOX ?? 'true').toLowerCase() !== 'false';
 }
 
-// TODO: confirm the real hosted-page host once sandbox credentials +
-// FIUU's integration guide are in hand — placeholder based on FIUU's
-// general domain pattern, not yet verified.
-const HOSTED_PAGE_URL = isSandbox()
-  ? 'https://sandbox.merchant.razer.com/RMS/pay/'
+// Merchant ID is part of the URL path (not a form field) — confirmed
+// pattern: https://pay.fiuu.com/RMS/pay/{MerchantID}/{Payment_Method}.
+// {Payment_Method} is omitted here (channel selection stays enabled on
+// the hosted page).
+const HOSTED_PAGE_BASE = isSandbox()
+  ? 'https://sandbox-payment.fiuu.com/RMS/pay/'
   : 'https://pay.fiuu.com/RMS/pay/';
+
+// Non-payment-flow service APIs (refund, requery) use a separate FQDN —
+// per FIUU's docs, sandbox only swaps the *payment* host; these stay on
+// api.fiuu.com in both sandbox and production.
+const API_BASE = 'https://api.fiuu.com';
 
 function md5(input: string): string {
   return createHash('md5').update(input).digest('hex');
@@ -51,37 +53,42 @@ export interface HostedPageOrder {
   currency: string;
   customerEmail: string;
   customerName: string;
+  customerMobile: string;
+  billDesc: string;
   returnUrl: string;
   notifyUrl: string;
 }
 
 // Builds the signed field set for the redirect to FIUU's hosted payment
 // page. This is a form POST (auto-submitted client-side), not a GET
-// redirect. Field names/signing formula here are a placeholder shape —
-// see the file-level note above.
+// redirect.
 export function buildHostedPagePayload(order: HostedPageOrder): { url: string; fields: Record<string, string> } {
   const merchantId = process.env.FIUU_MERCHANT_ID!;
   const verifyKey = process.env.FIUU_VERIFY_KEY!;
   const amountStr = order.amount.toFixed(2);
 
-  // TODO: confirm this is FIUU's actual outbound signature formula for
-  // *initiating* a Hosted Payment Page transaction — only the inbound
-  // Notification URL formula (verifyNotificationSignature below) was
-  // confirmed during planning.
-  const vsign = md5(`${amountStr}${merchantId}${order.fiuuOrderId}${verifyKey}`);
+  // Confirmed formula (plain, non-extended form): vcode = md5(amount +
+  // merchantID + orderid + verify_key). This assumes the merchant portal's
+  // "Use extended format for Verify Payment" toggle (which would also fold
+  // currency into the hash) stays OFF — fine for a single-currency (MYR)
+  // shop. If that toggle is ever enabled in the portal, this formula must
+  // also append currency, or every payment request will fail vcode check.
+  const vcode = md5(`${amountStr}${merchantId}${order.fiuuOrderId}${verifyKey}`);
 
   return {
-    url: HOSTED_PAGE_URL,
+    url: `${HOSTED_PAGE_BASE}${merchantId}/`,
     fields: {
-      merchant_id: merchantId,
       amount: amountStr,
       orderid: order.fiuuOrderId,
       bill_name: order.customerName,
       bill_email: order.customerEmail,
+      bill_mobile: order.customerMobile,
+      bill_desc: order.billDesc,
+      country: 'MY',
       currency: order.currency,
-      vsign,
+      vcode,
       returnurl: order.returnUrl,
-      notifyurl: order.notifyUrl,
+      callbackurl: order.notifyUrl, // FIUU's real field name for both callback + notification URL
     },
   };
 }
@@ -127,26 +134,30 @@ export function buildAckBody(fields: Record<string, string>): string {
 
 export type RefundResult = { ok: true } | { ok: false; code: string; retryable: boolean };
 
-// Full/partial refund, up to 180 days post-transaction (per FIUU's docs).
-// For the payment_stock_conflict fallback (in-store sold the item during
-// an online hold) — not wired to any UI yet, see scripts/schema.sql's
-// 'refunded' status note. Same hash-signature pattern as above.
+// Full/partial refund, up to 180 days post-transaction (per FIUU's docs)
+// via the "Advanced Full/Partial Refund" API. For the
+// payment_stock_conflict fallback (in-store sold the item during an
+// online hold) — not wired to any UI yet, see scripts/schema.sql's
+// 'refunded' status note. RefundType 'P' with the full order amount acts
+// as a full refund — FIUU's spec only documents 'P' (partial) explicitly,
+// so this is the one universal path for both full and partial cases.
 export async function refundTransaction(input: {
-  txnId: string;
+  txnId: string; // FIUU's own TranID (order.fiuu_tran_id), not our orderid
   refId: string;
   amountCents: number;
 }): Promise<RefundResult> {
   const merchantId = process.env.FIUU_MERCHANT_ID!;
   const secretKey = process.env.FIUU_SECRET_KEY!;
   const amount = (input.amountCents / 100).toFixed(2);
-  const signature = md5(`${input.txnId}${merchantId}${amount}${secretKey}`);
+  const refundType = 'P';
+  // Signature = md5(RefundType + MerchantID + RefID + TxnID + Amount + secret_key)
+  const signature = md5(`${refundType}${merchantId}${input.refId}${input.txnId}${amount}${secretKey}`);
 
-  // TODO: confirm the real refund endpoint URL once sandbox credentials +
-  // FIUU's integration guide are in hand.
-  const res = await fetch(isSandbox() ? 'https://sandbox.merchant.razer.com/RMS/API/refund/' : 'https://pay.fiuu.com/RMS/API/refund/', {
+  const res = await fetch(`${API_BASE}/RMS/API/refundAPI/index.php`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
+      RefundType: refundType,
       MerchantID: merchantId,
       RefID: input.refId,
       TxnID: input.txnId,
@@ -156,12 +167,12 @@ export async function refundTransaction(input: {
   });
 
   if (!res.ok) return { ok: false, code: `HTTP_${res.status}`, retryable: true };
-  const text = await res.text();
-  // TODO: parse FIUU's actual PR001-PR020 error-code response format once
-  // confirmed against the live API — treating any non-"success" response
-  // as a non-retryable failure for now, safer default than assuming retry.
-  if (!/success/i.test(text)) return { ok: false, code: text.slice(0, 50), retryable: false };
-  return { ok: true };
+  const json = await res.json().catch(() => null);
+  // On error FIUU returns {error_code, error_desc} instead of Status.
+  if (!json || json.error_code) return { ok: false, code: json?.error_code ?? 'UNKNOWN', retryable: false };
+  // Status: 22 pending, 00 success, 11 rejected (per Advanced Refund spec).
+  if (json.Status === '22' || json.Status === '00') return { ok: true };
+  return { ok: false, code: json.reason ?? json.Status ?? 'REJECTED', retryable: false };
 }
 
 export type RequeryResult =
@@ -170,26 +181,31 @@ export type RequeryResult =
 
 // Reconciliation for a pending/expired order whose webhook never arrived
 // (see src/pages/api/admin/orders.ts's 'reconcile' action) — queries
-// FIUU's Requery API by our own fiuu_orderid. Field names/endpoint are a
-// placeholder pending FIUU's real Merchant Request API docs (confirmed
-// during planning only that a Requery API exists, by TxnID/OrderID — not
-// its exact request/response shape).
-export async function requeryTransaction(fiuuOrderId: string): Promise<RequeryResult> {
+// FIUU's "Query by order ID" Indirect Status Requery API by our own
+// fiuu_orderid. Needs the order's own amount since it's part of the skey
+// signature (binds the signed request to a specific charge, not just an
+// order id).
+export async function requeryTransaction(fiuuOrderId: string, amount: number): Promise<RequeryResult> {
   const merchantId = process.env.FIUU_MERCHANT_ID!;
-  const secretKey = process.env.FIUU_SECRET_KEY!;
-  const signature = md5(`${fiuuOrderId}${merchantId}${secretKey}`);
+  const verifyKey = process.env.FIUU_VERIFY_KEY!;
+  const amountStr = amount.toFixed(2);
+  // skey = md5(oID + domain + verify_key + amount)
+  const skey = md5(`${fiuuOrderId}${merchantId}${verifyKey}${amountStr}`);
 
-  // TODO: confirm the real requery endpoint URL + response shape.
-  const res = await fetch(isSandbox() ? 'https://sandbox.merchant.razer.com/RMS/API/requery/' : 'https://pay.fiuu.com/RMS/API/requery/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ MerchantID: merchantId, OrderID: fiuuOrderId, Signature: signature }).toString(),
-  });
+  const url = new URL(`${API_BASE}/RMS/query/q_by_oid.php`);
+  url.searchParams.set('amount', amountStr);
+  url.searchParams.set('oID', fiuuOrderId);
+  url.searchParams.set('domain', merchantId);
+  url.searchParams.set('skey', skey);
+  url.searchParams.set('type', '2'); // JSON response
 
+  const res = await fetch(url);
   if (!res.ok) return { ok: false, error: `HTTP_${res.status}` };
-  const text = await res.text();
-  // TODO: parse the real response format once confirmed.
-  if (/^00/.test(text)) return { ok: true, status: 'paid' };
-  if (/^11/.test(text)) return { ok: true, status: 'failed' };
+  const json = await res.json().catch(() => null);
+  if (!json) return { ok: false, error: 'Invalid response from FIUU' };
+
+  // StatCode: 00 success, 11 failure, 22 pending/authorized (FPX-B2B/M2E).
+  if (json.StatCode === '00') return { ok: true, status: 'paid', tranId: json.TranID };
+  if (json.StatCode === '11') return { ok: true, status: 'failed' };
   return { ok: true, status: 'pending' };
 }

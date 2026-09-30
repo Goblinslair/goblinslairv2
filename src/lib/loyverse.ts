@@ -9,6 +9,7 @@ const DISCOUNT_BY_LEVEL: Record<1 | 2, number> = { 1: 10, 2: 15 };
 export interface MembershipTier {
   level: 1 | 2 | null;
   discountPercent: number;
+  phoneNumber: string | null;
 }
 
 // Links a website account to its Loyverse customer record by email — the
@@ -18,13 +19,13 @@ export interface MembershipTier {
 // not an error, since it's an expected/legitimate outcome, not a bug.
 export async function getMembershipTier(email: string): Promise<MembershipTier> {
   const token = process.env.LOYVERSE_ACCESS_TOKEN;
-  if (!token) return { level: null, discountPercent: 0 };
+  if (!token) return { level: null, discountPercent: 0, phoneNumber: null };
 
   const url = new URL(`${BASE_URL}/customers`);
   url.searchParams.set('email', email);
 
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) return { level: null, discountPercent: 0 };
+  if (!res.ok) return { level: null, discountPercent: 0, phoneNumber: null };
 
   const json = await res.json();
   const listKey = Object.keys(json).find((k) => Array.isArray(json[k]));
@@ -41,7 +42,10 @@ export async function getMembershipTier(email: string): Promise<MembershipTier> 
       ? 1
       : null;
 
-  return { level, discountPercent: level ? DISCOUNT_BY_LEVEL[level] : 0 };
+  // Also used to pre-fill the checkout phone field (FIUU requires
+  // bill_mobile on every order) — same already-fetched record, no extra
+  // API call.
+  return { level, discountPercent: level ? DISCOUNT_BY_LEVEL[level] : 0, phoneNumber: customer?.phone_number || null };
 }
 
 // Looks up a Loyverse customer id by email — same lookup as

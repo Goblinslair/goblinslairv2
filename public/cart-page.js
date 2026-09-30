@@ -143,18 +143,27 @@
   var checkoutBtn = document.getElementById('cart-checkout-btn');
   if (checkoutBtn && checkoutBtn.tagName === 'BUTTON') {
     checkoutBtn.addEventListener('click', function () {
-      var payload = { fulfillmentMethod: isDelivery() ? 'delivery' : 'pickup', shippingAddress: null };
+      var contactPhoneEl = document.getElementById('contact-phone');
+      var contactPhone = contactPhoneEl ? contactPhoneEl.value.trim() : '';
+
+      // FIUU requires a phone number (bill_mobile) on every order, pickup
+      // or delivery — see checkout.ts.
+      if (!contactPhone) {
+        window.alert('Please enter a phone number.');
+        return;
+      }
+
+      var payload = { fulfillmentMethod: isDelivery() ? 'delivery' : 'pickup', customerPhone: contactPhone, shippingAddress: null };
 
       if (isDelivery()) {
         var line1 = document.getElementById('ship-line1').value.trim();
         var city = document.getElementById('ship-city').value.trim();
         var postcode = document.getElementById('ship-postcode').value.trim();
         var state = stateSelect.value;
-        var phone = document.getElementById('ship-phone').value.trim();
 
         // Client-side check for a fast/clear error — the server repeats
         // this validation authoritatively either way (see checkout.ts).
-        if (!line1 || !city || !postcode || !state || !phone) {
+        if (!line1 || !city || !postcode || !state) {
           window.alert('Please fill in your full delivery address.');
           return;
         }
@@ -169,7 +178,7 @@
           city: city,
           postcode: postcode,
           state: state,
-          phone: phone,
+          phone: contactPhone,
         };
       }
 

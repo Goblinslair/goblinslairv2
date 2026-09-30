@@ -12,7 +12,7 @@ import { MALAYSIA_STATES } from '../lib/shipping';
 
 const token = Astro.cookies.get(SESSION_COOKIE)?.value;
 const customer = token ? await getSessionCustomer(token) : null;
-const tier = customer ? await getMembershipTier(customer.email) : { level: null, discountPercent: 0 };
+const tier = customer ? await getMembershipTier(customer.email) : { level: null, discountPercent: 0, phoneNumber: null };
 ---
 <BaseLayout title="Your Cart — Goblin's Lair">
 
@@ -57,6 +57,15 @@ const tier = customer ? await getMembershipTier(customer.email) : { level: null,
       )}
 
       {customer && (
+        <div class="contact-form">
+          <div>
+            <label for="contact-phone">Phone Number</label>
+            <input type="tel" id="contact-phone" placeholder="For your order confirmation" required value={tier.phoneNumber ?? ''}>
+          </div>
+        </div>
+      )}
+
+      {customer && (
         <div class="contact-form delivery-fields" id="delivery-fields" hidden>
           <div>
             <label for="ship-line1">Address Line 1</label>
@@ -82,10 +91,6 @@ const tier = customer ? await getMembershipTier(customer.email) : { level: null,
                 <option value={s.name} data-region={s.region}>{s.name}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label for="ship-phone">Phone Number</label>
-            <input type="tel" id="ship-phone" placeholder="For the courier" required>
           </div>
         </div>
       )}

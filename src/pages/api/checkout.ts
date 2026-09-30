@@ -29,6 +29,13 @@ export const POST: APIRoute = async ({ request, cookies, site, url }) => {
   const body = await request.json().catch(() => null);
   const fulfillmentMethod: 'pickup' | 'delivery' = body?.fulfillmentMethod === 'delivery' ? 'delivery' : 'pickup';
 
+  // FIUU requires a phone number (bill_mobile) on every order, pickup or
+  // delivery — see src/lib/fiuu.ts's buildHostedPagePayload.
+  const customerPhone = typeof body?.customerPhone === 'string' ? body.customerPhone.trim() : '';
+  if (!customerPhone) {
+    return new Response(JSON.stringify({ error: 'Please enter a phone number.' }), { status: 400 });
+  }
+
   let shippingAddress: ShippingAddress | null = null;
   let shippingCost = 0;
 
@@ -39,9 +46,9 @@ export const POST: APIRoute = async ({ request, cookies, site, url }) => {
     const city = typeof addr?.city === 'string' ? addr.city.trim() : '';
     const postcode = typeof addr?.postcode === 'string' ? addr.postcode.trim() : '';
     const state = typeof addr?.state === 'string' ? addr.state.trim() : '';
-    const phone = typeof addr?.phone === 'string' ? addr.phone.trim() : '';
+    const phone = typeof addr?.phone === 'string' ? addr.phone.trim() : customerPhone;
 
-    if (!line1 || !city || !postcode || !state || !phone) {
+    if (!line1 || !city || !postcode || !state) {
       return new Response(JSON.stringify({ error: 'Please fill in your full delivery address.' }), { status: 400 });
     }
     if (!/^\d{5}$/.test(postcode)) {
@@ -154,12 +161,15 @@ export const POST: APIRoute = async ({ request, cookies, site, url }) => {
   }
 
   const siteOrigin = site?.origin ?? url.origin;
+  const itemCount = orderItems.reduce((sum, item) => sum + item.qty, 0);
   const { url: hostedUrl, fields } = buildHostedPagePayload({
     fiuuOrderId,
     amount: total,
     currency: 'MYR',
     customerEmail: customer.email,
     customerName: customer.name,
+    customerMobile: customerPhone,
+    billDesc: `${itemCount} item(s) from Goblins Lair`,
     returnUrl: `${siteOrigin}/checkout/return?orderid=${fiuuOrderId}`,
     notifyUrl: `${siteOrigin}/api/checkout/fiuu-webhook`,
   });
