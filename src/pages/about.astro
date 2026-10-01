@@ -1,30 +1,60 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+// Same drop-in-a-named-file convention as index.astro: put keeper-1.jpg (etc.)
+// in src/assets/images/ and it replaces the CSS gradient placeholder below.
+const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/images/*.{jpg,jpeg,png}',
+  { eager: true },
+);
+const imagesByName = new Map<string, ImageMetadata>(
+  Object.entries(imageFiles).map(([filePath, module]) => [
+    filePath.split('/').pop()!.replace(/\.(jpg|jpeg|png)$/, ''),
+    module.default,
+  ]),
+);
+async function backgroundStyle(basename: string, width: number) {
+  const source = imagesByName.get(basename);
+  if (!source) return undefined;
+  const optimized = await getImage({
+    src: source,
+    width: Math.min(width, source.width),
+    format: 'webp',
+    quality: 70,
+  });
+  return `background-image:url('${optimized.src}');background-size:cover;background-position:center;`;
+}
+const keeperImages = await Promise.all(
+  [1, 2].map((n) => backgroundStyle(`keeper-${n}`, 360)),
+);
+const storyImage = await backgroundStyle('about-story', 1000);
 ---
 <BaseLayout title="About Us — Goblin's Lair">
 
   <div class="page-header">
     <div class="hero-eyebrow">Who We Are</div>
     <h1>About Goblin's Lair</h1>
-    <p>A hobby shop built by people who'd rather be at the painting table than anywhere else.</p>
+    <p>A hobby shop built by people who'd rather be at the painting or gaming table than anywhere else.</p>
   </div>
 
   <section class="about" style="padding-bottom: 0;">
     <div class="about-inner">
-      <div class="about-art"><div class="seal">GL</div></div>
+      <div class="about-art" style={storyImage}>{!storyImage && <div class="seal">GL</div>}</div>
       <div class="about-copy">
         <div class="section-eyebrow">Our Story</div>
-        <h2>From One Folding Table to a Full Battlefield</h2>
-        <p>Goblin's Lair started with a single paint rack in the corner of a friend's game store and a Saturday group that outgrew its table. We opened our own doors so that group would always have somewhere to go.</p>
-        <p>Today we carry full ranges for Warhammer 40,000 and Age of Sigmar, alongside the paints, tools, and terrain to finish what you start. Every person behind the counter plays — so if you've got a question about a list, a paint scheme, or a rule, someone here has already argued about it.</p>
+        <h2>Two nerds came together with one goal in mind</h2>
+        <p>Goblin's Lair was an idea that was brewing for a year: Can a miniature games space be a hub for people to come together and enjoy the hobby under one roof?</p>
+        <p>Today we have a budding community of new and old hobbyists enjoying the hobby together, sharing stories regardless of whether it's about the hobby or life. We welcome all people from different walks of life to come visit The Lair and become part of something bigger.</p>
       </div>
     </div>
 
     <div class="stat-row">
-      <div class="stat"><b>7</b><span>Years Open</span></div>
-      <div class="stat"><b>2</b><span>Game Systems Stocked</span></div>
+      <div class="stat"><b>1</b><span>Year Open</span></div>
+      <div class="stat"><b>3</b><span>Game Systems Stocked</span></div>
       <div class="stat"><b>6</b><span>Painting Tables</span></div>
-      <div class="stat"><b>200+</b><span>Saturday Regulars</span></div>
+      <div class="stat"><b>20+</b><span>Saturday & Sunday Regulars</span></div>
     </div>
   </section>
 
@@ -38,26 +68,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="section-head">
       <div class="section-eyebrow">Meet the Keepers</div>
       <h2>The People Behind the Counter</h2>
-      <p>Every keeper has a home faction — and strong opinions about yours.</p>
+      <p>The founders of Goblin's Lair</p>
     </div>
     <div class="team-grid">
       <div class="team-card">
-        <div class="team-photo"></div>
-        <h3>Mara Voss</h3>
-        <span>Founder &amp; 40K Lead</span>
-        <p>Runs the Saturday league and paints faster than anyone should be able to.</p>
+        <div class="team-photo" style={keeperImages[0]}></div>
+        <h3>Wesley Goh</h3>
+        <span>I can't stop painting red, please help</span>
+        <p>Massive knowledge of Warhammer lore and products. Part of the hobby for 15+ years.</p>
       </div>
       <div class="team-card">
-        <div class="team-photo"></div>
-        <h3>Devlin Ash</h3>
-        <span>Age of Sigmar Buyer</span>
-        <p>Handles the AoS range and can recite every battletome from memory.</p>
-      </div>
-      <div class="team-card">
-        <div class="team-photo"></div>
-        <h3>Toma Reyes</h3>
-        <span>Hobby &amp; Terrain</span>
-        <p>Builds the in-store terrain and teaches our weekend painting classes.</p>
+        <div class="team-photo" style={keeperImages[1]}></div>
+        <h3>Tarvin Gill</h3>
+        <span>Buys cool models, loses all games</span>
+        <p>Blown away with Warhammer lore since he was 10 years old, now keeps the background work of Goblin's Lair running.</p>
       </div>
     </div>
   </section>
@@ -65,7 +89,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <section class="contact" style="padding-top: 80px;">
     <div class="section-eyebrow">Visit the Lair</div>
     <h2>Come Play a Game</h2>
-    <p class="lead">Six tables, always open for a pickup game or a painting session.</p>
+    <p class="lead">Five tables, always open for a pickup game or a painting session.</p>
     <a href="/contact" class="btn btn-primary">Get Directions</a>
   </section>
 
