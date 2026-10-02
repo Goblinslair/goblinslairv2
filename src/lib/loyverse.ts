@@ -84,7 +84,7 @@ export async function createLoyverseReceipt(input: {
   storeId: string;
   customerEmail: string;
   items: { variantId: string; quantity: number }[];
-  discountAmount: number;
+  discountPercent: number; // 0, 10, or 15 — maps to a real Loyverse discount entity below, never sent as a raw amount
   totalAmount: number;
   note: string; // fiuu_orderid, embedded for audit traceability
   shippingCost?: number;
@@ -96,9 +96,23 @@ export async function createLoyverseReceipt(input: {
   const paymentTypeId = process.env.LOYVERSE_ONLINE_PAYMENT_TYPE_ID;
   if (!paymentTypeId) return { ok: false, error: 'LOYVERSE_ONLINE_PAYMENT_TYPE_ID not configured' };
 
-  const lineItems: { variant_id: string; quantity: number; price?: number }[] = input.items.map((item) => ({
+  // Loyverse rejects total_discounts[].id unless it's a real, pre-existing
+  // Discount record (the in-store "Level 1/2 Membership" entries, type
+  // FIXED_PERCENT at 10%/15% — same split as DISCOUNT_BY_LEVEL above).
+  // Applied per product line (line_discounts) rather than as a
+  // receipt-level total_discounts entry so it only ever touches the
+  // product lines, never the shipping line added below.
+  let discountId: string | undefined;
+  if (input.discountPercent > 0) {
+    const envVar = input.discountPercent >= 15 ? 'LOYVERSE_DISCOUNT_ID_LEVEL2' : 'LOYVERSE_DISCOUNT_ID_LEVEL1';
+    discountId = process.env[envVar];
+    if (!discountId) return { ok: false, error: `${envVar} not configured` };
+  }
+
+  const lineItems: { variant_id: string; quantity: number; price?: number; line_discounts?: { id: string }[] }[] = input.items.map((item) => ({
     variant_id: item.variantId,
     quantity: item.quantity,
+    ...(discountId ? { line_discounts: [{ id: discountId }] } : {}),
   }));
 
   // Delivery orders need their own catalog line so the receipt's line
@@ -132,20 +146,6 @@ export async function createLoyverseReceipt(input: {
       source: 'Goblin\'s Lair Website',
       note: input.note,
       line_items: lineItems,
-      // Confirmed shape during planning: total_discounts is an array;
-      // type VARIABLE_AMOUNT pairs with `money_amount` (VARIABLE_PERCENTAGE
-      // would instead pair with `percentage`, applied proportionally
-      // across every line — deliberately NOT used here, since a
-      // percentage discount would incorrectly also discount the shipping
-      // line item above; the membership discount only ever applies to
-      // the product subtotal). Sending the already-computed exact amount
-      // sidesteps needing to know how Loyverse's own percentage math
-      // treats mixed line items. Whether `name`/`id` are required on this
-      // object wasn't confirmed — verify against a real test receipt (see
-      // plan's Verification section) before relying on this in production.
-      total_discounts: input.discountAmount > 0
-        ? [{ name: 'Member Discount', type: 'VARIABLE_AMOUNT', money_amount: input.discountAmount }]
-        : undefined,
       payments: [{ payment_type_id: paymentTypeId, money_amount: input.totalAmount }],
     }),
   });

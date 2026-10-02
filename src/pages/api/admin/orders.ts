@@ -66,6 +66,10 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
       return new Response(JSON.stringify({ error: 'This order already has a Loyverse receipt.' }), { status: 409 });
     }
     await ensureLoyverseReceipt(order);
+    const updated = await getOrderById(id);
+    if (!updated?.loyverse_receipt_id) {
+      return new Response(JSON.stringify({ error: 'Loyverse receipt creation failed again — check server logs for the exact reason.' }), { status: 502 });
+    }
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   }
 

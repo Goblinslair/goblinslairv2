@@ -121,7 +121,7 @@ export async function ensureLoyverseReceipt(order: OrderRow): Promise<void> {
     items: order.items
       .filter((item): item is OrderItem & { variantId: string } => !!item.variantId)
       .map((item) => ({ variantId: item.variantId, quantity: item.qty })),
-    discountAmount: parseFloat(order.discount_amount),
+    discountPercent: parseFloat(order.discount_percent),
     totalAmount: parseFloat(order.total),
     note: order.fiuu_orderid, // audit trail — traces any accidental duplicate straight back to the order
     shippingCost,
