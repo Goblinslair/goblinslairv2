@@ -5,7 +5,7 @@ import { notifyOrderPaid } from './order-notifications';
 import { requeryTransaction, type FiuuNotificationFields } from './fiuu';
 import { getShippingRegion } from './shipping';
 
-interface OrderItem {
+export interface OrderItem {
   slug: string;
   name: string;
   price: number;
@@ -14,7 +14,7 @@ interface OrderItem {
   image: string | null;
 }
 
-interface ShippingAddress {
+export interface ShippingAddress {
   line1: string;
   line2: string | null;
   city: string;
@@ -23,17 +23,19 @@ interface ShippingAddress {
   phone: string;
 }
 
-interface OrderRow {
+export interface OrderRow {
   id: number;
   customer_id: number;
   status: string;
   items: OrderItem[];
+  subtotal: string;
   discount_percent: string;
   discount_amount: string;
   total: string;
   loyverse_receipt_id: string | null;
   fiuu_orderid: string;
   customer_email: string;
+  customer_name: string | null;
   fulfillment_method: 'pickup' | 'delivery';
   shipping_cost: string;
   shipping_address: ShippingAddress | null;
@@ -41,7 +43,7 @@ interface OrderRow {
 
 async function getOrderByFiuuOrderId(fiuuOrderId: string): Promise<OrderRow | null> {
   const rows = await sql<OrderRow[]>`
-    SELECT orders.*, customers.email AS customer_email
+    SELECT orders.*, customers.email AS customer_email, customers.name AS customer_name
     FROM orders JOIN customers ON customers.id = orders.customer_id
     WHERE orders.fiuu_orderid = ${fiuuOrderId}
   `;
@@ -50,7 +52,7 @@ async function getOrderByFiuuOrderId(fiuuOrderId: string): Promise<OrderRow | nu
 
 export async function getOrderById(id: number): Promise<OrderRow | null> {
   const rows = await sql<OrderRow[]>`
-    SELECT orders.*, customers.email AS customer_email
+    SELECT orders.*, customers.email AS customer_email, customers.name AS customer_name
     FROM orders JOIN customers ON customers.id = orders.customer_id
     WHERE orders.id = ${id}
   `;
@@ -178,7 +180,7 @@ export async function finalizeOrderPayment(fields: FiuuNotificationFields): Prom
     await ensureLoyverseReceipt(order);
 
     if (flipped.length > 0) {
-      await notifyOrderPaid({ id: order.id, customerEmail: order.customer_email, total: parseFloat(order.total) });
+      await notifyOrderPaid(order);
     }
   } else if (fields.status === '11') {
     await sql`UPDATE orders SET status = 'cancelled' WHERE id = ${order.id} AND status = 'pending'`;
@@ -213,7 +215,7 @@ export async function reconcilePendingOrder(orderId: number): Promise<{ ok: bool
     `;
     await ensureLoyverseReceipt(order);
     if (flipped.length > 0) {
-      await notifyOrderPaid({ id: order.id, customerEmail: order.customer_email, total: parseFloat(order.total) });
+      await notifyOrderPaid(order);
     }
     return { ok: true, message: 'FIUU confirmed this order was paid — marked paid and receipt creation triggered.' };
   }
