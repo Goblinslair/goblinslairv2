@@ -11,6 +11,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { sql } from '../../lib/db';
 import { getSessionCustomer, SESSION_COOKIE } from '../../lib/auth';
 
+// FIUU's hosted page lands here via a cross-site top-level POST (confirmed
+// live 2026-10-02). Browsers withhold SameSite=Lax cookies on exactly that
+// kind of request (Lax only carries cookies on cross-site GET navigations),
+// so the session cookie below would read as missing even for a logged-in
+// customer. Converting to a same-site GET via redirect first — before
+// touching cookies — sidesteps that: the follow-up request is an ordinary
+// top-level navigation to our own domain, which does carry the cookie.
+if (Astro.request.method === 'POST') {
+  return Astro.redirect(`${Astro.url.pathname}${Astro.url.search}`);
+}
+
 const token = Astro.cookies.get(SESSION_COOKIE)?.value;
 const customer = token ? await getSessionCustomer(token) : null;
 if (!customer) {
