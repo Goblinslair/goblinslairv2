@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../../lib/admin-auth';
 import { sql } from '../../../lib/db';
 import { getOrderById, ensureLoyverseReceipt, reconcilePendingOrder } from '../../../lib/order-fulfillment';
+import { notifyOrderPaid } from '../../../lib/order-notifications';
 
 async function requireAdmin(cookies: any) {
   const token = cookies.get(ADMIN_SESSION_COOKIE)?.value;
@@ -71,6 +72,17 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
       return new Response(JSON.stringify({ error: 'Loyverse receipt creation failed again — check server logs for the exact reason.' }), { status: 502 });
     }
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  }
+
+  if (action === 'resend-email') {
+    const order = await getOrderById(id);
+    if (!order) return new Response(JSON.stringify({ error: 'Order not found.' }), { status: 404 });
+    if (order.status !== 'paid' && order.status !== 'fulfilled') {
+      return new Response(JSON.stringify({ error: 'Order has not been paid.' }), { status: 409 });
+    }
+    const result = await notifyOrderPaid(order);
+    if (!result.ok) return new Response(JSON.stringify({ error: `Email send failed: ${result.error}` }), { status: 502 });
+    return new Response(JSON.stringify({ ok: true, message: `Confirmation email sent to ${order.customer_email}.` }), { status: 200 });
   }
 
   if (action === 'reconcile') {

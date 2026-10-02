@@ -31,4 +31,5 @@
   wire('.admin-fulfill-btn', 'fulfill', 'Mark this order as picked up?', false);
   wire('.admin-retry-receipt-btn', 'retry-receipt', null, false);
   wire('.admin-reconcile-btn', 'reconcile', null, true);
+  wire('.admin-resend-email-btn', 'resend-email', null, true);
 })();

@@ -90,6 +90,9 @@ const orders = statusFilter
                 {(order.display_status === 'expired' || order.status === 'pending') && (
                   <button type="button" class="admin-reconcile-btn" data-order-id={order.id}>Reconcile</button>
                 )}
+                {(order.display_status === 'paid' || order.status === 'fulfilled') && (
+                  <button type="button" class="admin-resend-email-btn" data-order-id={order.id}>Resend Email</button>
+                )}
               </span>
             </li>
           ))}

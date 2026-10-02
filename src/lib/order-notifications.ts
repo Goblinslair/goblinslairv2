@@ -146,11 +146,16 @@ Questions? Reply to this email or reach us at ${SENDER_EMAIL}.
 Goblin's Lair, Petaling Jaya, Selangor`;
 }
 
-export async function notifyOrderPaid(order: OrderRow): Promise<void> {
+// Returns a result rather than throwing — callers on the webhook path fire
+// this and forget (a Brevo hiccup must never roll back payment/receipt
+// logic), while src/pages/api/admin/orders.ts's "resend email" action
+// awaits the result to tell staff whether it actually went out.
+export async function notifyOrderPaid(order: OrderRow): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {
-    console.error(`Order ${order.id} (${order.fiuu_orderid}): BREVO_API_KEY not configured — skipping payment confirmation email.`);
-    return;
+    const error = 'BREVO_API_KEY not configured';
+    console.error(`Order ${order.id} (${order.fiuu_orderid}): ${error} — skipping payment confirmation email.`);
+    return { ok: false, error };
   }
 
   try {
@@ -169,8 +174,11 @@ export async function notifyOrderPaid(order: OrderRow): Promise<void> {
     if (!res.ok) {
       const body = await res.text().catch(() => '');
       console.error(`Order ${order.id} (${order.fiuu_orderid}): Brevo email send failed`, res.status, body);
+      return { ok: false, error: `Brevo returned ${res.status}` };
     }
+    return { ok: true };
   } catch (err) {
     console.error(`Order ${order.id} (${order.fiuu_orderid}): Brevo email send threw`, err);
+    return { ok: false, error: err instanceof Error ? err.message : 'Unknown error' };
   }
 }
