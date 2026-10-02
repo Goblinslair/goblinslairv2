@@ -144,6 +144,9 @@ export async function createLoyverseReceipt(input: {
       store_id: input.storeId,
       customer_id: customerId ?? undefined,
       source: 'Goblin\'s Lair Website',
+      // Receipts with no pos_device_id belong to no till, so Loyverse's
+      // shift summary never counts them. Optional: unset keeps old behavior.
+      pos_device_id: process.env.LOYVERSE_POS_DEVICE_ID || undefined,
       note: input.note,
       line_items: lineItems,
       payments: [{ payment_type_id: paymentTypeId, money_amount: input.totalAmount }],
