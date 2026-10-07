@@ -59,6 +59,28 @@ export async function getOrderById(id: number): Promise<OrderRow | null> {
   return rows[0] ?? null;
 }
 
+// Removes just the purchased items from the customer's server-side cart
+// once payment is confirmed (anything added after checkout started stays).
+// Done server-side because the browser can't be trusted to do it: the
+// return page's own GLCart.clear() runs before the browser knows it's
+// logged in, so it never pushes the empty cart, and the next login sync
+// pulls the old server copy straight back down.
+async function clearPurchasedFromCart(order: OrderRow): Promise<void> {
+  const slugs = order.items.map((item) => item.slug);
+  try {
+    await sql`
+      UPDATE carts SET updated_at = now(), items = COALESCE(
+        (SELECT jsonb_agg(elem) FROM jsonb_array_elements(items) AS elem
+         WHERE NOT (elem->>'slug' = ANY(${slugs}))),
+        '[]'::jsonb
+      )
+      WHERE customer_id = ${order.customer_id}
+    `;
+  } catch (err) {
+    console.error(`Order ${order.id}: failed to clear purchased items from cart`, err);
+  }
+}
+
 // Re-verifies live stock immediately before creating the Loyverse receipt
 // (not just relying on the checkout-time check) — Loyverse's own
 // negative-stock alert is a dismissible UI warning, not a hard API-level
@@ -180,6 +202,7 @@ export async function finalizeOrderPayment(fields: FiuuNotificationFields): Prom
     await ensureLoyverseReceipt(order);
 
     if (flipped.length > 0) {
+      await clearPurchasedFromCart(order);
       await notifyOrderPaid(order);
     }
   } else if (fields.status === '11') {
@@ -215,6 +238,7 @@ export async function reconcilePendingOrder(orderId: number): Promise<{ ok: bool
     `;
     await ensureLoyverseReceipt(order);
     if (flipped.length > 0) {
+      await clearPurchasedFromCart(order);
       await notifyOrderPaid(order);
     }
     return { ok: true, message: 'FIUU confirmed this order was paid — marked paid and receipt creation triggered.' };
