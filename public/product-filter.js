@@ -9,11 +9,12 @@
   if (!cards.length) return;
 
   var BATCH_SIZE = 24;
-  var activeFilter = 'all';
-  var activeCategoryMatch = '';
-  var activeNamePrefix = '';
-  var activeNameContains = '';
-  var activeSystem = '';
+  // Each active filter is { key, label, categoryMatch, namePrefix,
+  // nameContains, system }. Several can be active at once; a product shows
+  // if it matches ANY of them (a product only has one category, so "AND"
+  // across factions would always be empty). Search and Hide Out of Stock
+  // still narrow the result on top of that.
+  var activeFilters = [];
   var visibleLimit = BATCH_SIZE;
 
   // Sorting has to physically reorder the DOM nodes (not just the order we
@@ -36,6 +37,23 @@
     cards.forEach(function (card) { grid.appendChild(card); });
   }
 
+  function cardMatchesFilter(f, card, cardName, cardSystems) {
+    // A "system" filter (homepage /products?system=... link, or the
+    // drawer's own "All <group>" button) matches the card's whole
+    // game-system group. data-system is space-separated (a product can
+    // belong to more than one group — see the comment above `systemsFor`
+    // in products.astro), so this checks token membership, not equality.
+    if (f.system) return cardSystems.indexOf(f.system) !== -1;
+
+    var matchesCategory = f.categoryMatch === '*' || card.getAttribute('data-category') === f.categoryMatch;
+    var matchesNamePrefix = !f.namePrefix || cardName.indexOf(f.namePrefix) === 0;
+    // nameContains is an OR: it pulls in matches from other categories
+    // (e.g. "Spearhead: Blades of Khorne...") without removing them from
+    // their own category's filter — it never excludes results.
+    var matchesNameContains = !!f.nameContains && cardName.indexOf(f.nameContains) !== -1;
+    return (matchesCategory && matchesNamePrefix) || matchesNameContains;
+  }
+
   function applyFilters() {
     var query = search ? search.value.trim().toLowerCase() : '';
     var hideOos = hideOosBtn ? hideOosBtn.getAttribute('aria-pressed') === 'true' : false;
@@ -44,22 +62,10 @@
 
     cards.forEach(function (card) {
       var cardName = card.getAttribute('data-name');
-      var matchesCategory = activeCategoryMatch === '*' || card.getAttribute('data-category') === activeCategoryMatch;
-      var matchesNamePrefix = !activeNamePrefix || cardName.indexOf(activeNamePrefix) === 0;
-      // nameContains is an OR: it pulls in matches from other categories
-      // (e.g. "Spearhead: Blades of Khorne...") without removing them
-      // from their own category's filter — it never excludes results.
-      var matchesNameContains = !!activeNameContains && cardName.indexOf(activeNameContains) !== -1;
-      // A "system" filter (arrived via a homepage /products?system=... link,
-      // or the drawer's own "All <group>" button) matches on the card's
-      // whole game-system group rather than one specific category — its own
-      // alternative alongside the normal category/name-prefix/name-contains
-      // checks above. data-system is space-separated (a product can belong
-      // to more than one group — see the comment above `systemsFor` in
-      // products.astro), so this checks token membership, not equality.
       var cardSystems = (card.getAttribute('data-system') || '').split(' ');
-      var matchesSystem = !!activeSystem && cardSystems.indexOf(activeSystem) !== -1;
-      var matchesFilter = activeFilter === 'all' || (matchesCategory && matchesNamePrefix) || matchesNameContains || matchesSystem;
+      var matchesFilter = activeFilters.length === 0 || activeFilters.some(function (f) {
+        return cardMatchesFilter(f, card, cardName, cardSystems);
+      });
       var matchesSearch = !query || cardName.indexOf(query) !== -1;
       var stock = card.getAttribute('data-stock');
       var isOutOfStock = stock !== '' && Number(stock) <= 0;
@@ -121,17 +127,18 @@
   var drawer = document.getElementById('filter-drawer');
   var openBtn = document.getElementById('filter-drawer-open');
   var closeBtn = document.getElementById('filter-drawer-close');
+  var doneBtn = document.getElementById('filter-drawer-done');
   var backdrop = document.getElementById('filter-drawer-backdrop');
   var backBtn = document.getElementById('filter-drawer-back');
   var title = document.getElementById('filter-drawer-title');
   var defaultTitle = title ? title.textContent : '';
   var views = drawer ? drawer.querySelectorAll('.filter-drawer-view') : [];
-  var leafButtons = drawer ? drawer.querySelectorAll('.filter-drawer-item[data-filter]') : [];
+  var leafButtons = drawer ? drawer.querySelectorAll('.filter-drawer-item[data-filter]:not([data-filter="all"])') : [];
+  var allProductsBtn = drawer ? drawer.querySelector('.filter-drawer-item[data-filter="all"]') : null;
   var groupButtons = drawer ? drawer.querySelectorAll('.filter-drawer-group[data-group]') : [];
   var systemButtons = drawer ? drawer.querySelectorAll('.filter-drawer-item[data-system-filter]') : [];
-  var chip = document.getElementById('active-filter-chip');
-  var chipText = document.getElementById('active-filter-chip-text');
-  var chipClear = document.getElementById('active-filter-chip-clear');
+  var chips = document.getElementById('active-filter-chips');
+  var openBtnLabel = openBtn ? openBtn.textContent.trim() : 'Filter';
 
   if (!drawer || !openBtn) return;
 
@@ -159,58 +166,105 @@
     openBtn.focus();
   }
 
-  function setActiveFilter(filterValue, label, categoryMatch, namePrefix, nameContains) {
-    activeFilter = filterValue;
-    activeCategoryMatch = categoryMatch || filterValue;
-    activeNamePrefix = namePrefix || '';
-    activeNameContains = nameContains || '';
-    activeSystem = '';
-    visibleLimit = BATCH_SIZE;
-
-    leafButtons.forEach(function (btn) {
-      btn.classList.toggle('is-active', btn.getAttribute('data-filter') === filterValue);
-    });
-    systemButtons.forEach(function (btn) { btn.classList.remove('is-active'); });
-
-    if (chip && chipText) {
-      if (filterValue === 'all') {
-        chip.hidden = true;
-      } else {
-        chipText.textContent = label;
-        chip.hidden = false;
-      }
+  function indexOfFilter(key) {
+    for (var i = 0; i < activeFilters.length; i++) {
+      if (activeFilters[i].key === key) return i;
     }
+    return -1;
+  }
 
+  // Redraws everything that mirrors activeFilters: one removable chip per
+  // filter (plus "Clear all" once there's more than one), the drawer's
+  // highlighted rows, and the count on the Filter button.
+  function render() {
+    leafButtons.forEach(function (btn) {
+      var on = indexOfFilter(btn.getAttribute('data-filter')) !== -1;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-pressed', String(on));
+    });
+    systemButtons.forEach(function (btn) {
+      var on = indexOfFilter('system:' + btn.getAttribute('data-system-filter')) !== -1;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-pressed', String(on));
+    });
+    if (allProductsBtn) allProductsBtn.classList.toggle('is-active', activeFilters.length === 0);
+
+    openBtn.textContent = activeFilters.length ? openBtnLabel + ' (' + activeFilters.length + ')' : openBtnLabel;
+
+    if (!chips) return;
+    chips.textContent = '';
+    activeFilters.forEach(function (f) {
+      var chip = document.createElement('div');
+      chip.className = 'active-filter-chip';
+      var text = document.createElement('span');
+      text.textContent = f.label;
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.setAttribute('aria-label', 'Remove filter: ' + f.label);
+      remove.innerHTML = '&times;';
+      remove.addEventListener('click', function () { removeFilter(f.key); });
+      chip.appendChild(text);
+      chip.appendChild(remove);
+      chips.appendChild(chip);
+    });
+    if (activeFilters.length > 1) {
+      var clearAll = document.createElement('button');
+      clearAll.type = 'button';
+      clearAll.className = 'active-filter-clear-all';
+      clearAll.textContent = 'Clear all';
+      clearAll.addEventListener('click', clearFilters);
+      chips.appendChild(clearAll);
+    }
+    chips.hidden = activeFilters.length === 0;
+  }
+
+  function changed() {
+    visibleLimit = BATCH_SIZE;
+    render();
     applyFilters();
   }
 
-  // Landing via a homepage "Shop 40K/AoS/Hobby" link (/products?system=slug)
-  // or picking "All Warhammer 40,000"/etc. in the drawer pre-applies that
-  // whole game system as the active filter — same chip/clear UI as picking
-  // one category by hand.
-  function setSystemFilter(systemSlug, label) {
-    activeFilter = 'system:' + systemSlug;
-    activeCategoryMatch = '';
-    activeNamePrefix = '';
-    activeNameContains = '';
-    activeSystem = systemSlug;
-    visibleLimit = BATCH_SIZE;
+  function addFilter(filter) {
+    if (indexOfFilter(filter.key) === -1) activeFilters.push(filter);
+    changed();
+  }
 
-    leafButtons.forEach(function (btn) { btn.classList.remove('is-active'); });
-    systemButtons.forEach(function (btn) {
-      btn.classList.toggle('is-active', btn.getAttribute('data-system-filter') === systemSlug);
-    });
+  function removeFilter(key) {
+    var i = indexOfFilter(key);
+    if (i !== -1) activeFilters.splice(i, 1);
+    changed();
+  }
 
-    if (chip && chipText) {
-      chipText.textContent = label;
-      chip.hidden = false;
-    }
+  function toggleFilter(filter) {
+    if (indexOfFilter(filter.key) === -1) addFilter(filter);
+    else removeFilter(filter.key);
+  }
 
-    applyFilters();
+  function clearFilters() {
+    activeFilters = [];
+    changed();
+  }
+
+  function leafFilter(btn) {
+    return {
+      key: btn.getAttribute('data-filter'),
+      label: btn.textContent.trim(),
+      categoryMatch: btn.getAttribute('data-category') || btn.getAttribute('data-filter'),
+      namePrefix: btn.getAttribute('data-name-prefix') || '',
+      nameContains: btn.getAttribute('data-name-contains') || '',
+      system: ''
+    };
+  }
+
+  // A whole game system — via a homepage "Shop 40K/AoS/Hobby" link
+  // (/products?system=slug) or the drawer's "All <group>" row.
+  function systemFilter(slug, label) {
+    return { key: 'system:' + slug, label: label, categoryMatch: '', namePrefix: '', nameContains: '', system: slug };
   }
 
   openBtn.addEventListener('click', openDrawer);
   closeBtn.addEventListener('click', closeDrawer);
+  if (doneBtn) doneBtn.addEventListener('click', closeDrawer);
   backdrop.addEventListener('click', closeDrawer);
   backBtn.addEventListener('click', function () { showView('top'); });
 
@@ -225,35 +279,30 @@
     });
   });
 
+  // Rows toggle on/off and the drawer stays open, so several can be picked
+  // in one go; "Show Results" (or the backdrop/×) closes it.
   leafButtons.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      setActiveFilter(
-        btn.getAttribute('data-filter'),
-        btn.textContent.trim(),
-        btn.getAttribute('data-category'),
-        btn.getAttribute('data-name-prefix'),
-        btn.getAttribute('data-name-contains')
-      );
-      closeDrawer();
-    });
+    btn.addEventListener('click', function () { toggleFilter(leafFilter(btn)); });
   });
 
   systemButtons.forEach(function (btn) {
     btn.addEventListener('click', function () {
-      setSystemFilter(btn.getAttribute('data-system-filter'), btn.textContent.trim().replace(/^All /, ''));
-      closeDrawer();
+      toggleFilter(systemFilter(btn.getAttribute('data-system-filter'), btn.textContent.trim().replace(/^All /, '')));
     });
   });
 
-  if (chipClear) {
-    chipClear.addEventListener('click', function () {
-      setActiveFilter('all', '');
+  if (allProductsBtn) {
+    allProductsBtn.addEventListener('click', function () {
+      clearFilters();
+      closeDrawer();
     });
   }
 
   var systemParam = new URLSearchParams(window.location.search).get('system');
   if (systemParam) {
     var groupBtn = drawer.querySelector('.filter-drawer-group[data-group="' + systemParam + '"]');
-    setSystemFilter(systemParam, groupBtn ? groupBtn.getAttribute('data-label') : systemParam);
+    addFilter(systemFilter(systemParam, groupBtn ? groupBtn.getAttribute('data-label') : systemParam));
+  } else {
+    render();
   }
 })();

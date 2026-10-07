@@ -587,6 +587,23 @@ section{ padding: 100px 32px; }
   border-color: var(--maroon);
 }
 
+.active-filter-chips{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.active-filter-chips[hidden]{ display: none; }
+.active-filter-clear-all{
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  font-family: 'Althea', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--maroon);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.active-filter-clear-all:hover{ color: var(--brass); }
+.filter-drawer-footer{ flex-shrink: 0; padding: 14px 20px; border-top: 1px solid rgba(42,26,18,0.12); }
+.filter-drawer-footer .btn{ width: 100%; }
 .active-filter-chip[hidden]{ display: none; }
 .active-filter-chip{
   display: flex;

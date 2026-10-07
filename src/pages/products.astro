@@ -191,10 +191,7 @@ function systemsFor(product: (typeof products)[number]): string {
       <button id="hide-out-of-stock" class="btn btn-outline" type="button" aria-pressed="false">
         Hide Out of Stock
       </button>
-      <div class="active-filter-chip" id="active-filter-chip" hidden>
-        <span id="active-filter-chip-text"></span>
-        <button id="active-filter-chip-clear" type="button" aria-label="Clear filter">&times;</button>
-      </div>
+      <div class="active-filter-chips" id="active-filter-chips" hidden></div>
     </div>
 
     <div class="filter-drawer" id="filter-drawer" aria-hidden="true">
@@ -239,6 +236,9 @@ function systemsFor(product: (typeof products)[number]): string {
               ))}
             </div>
           ))}
+        </div>
+        <div class="filter-drawer-footer">
+          <button class="btn btn-primary" id="filter-drawer-done" type="button">Show Results</button>
         </div>
       </div>
     </div>
