@@ -1,0 +1,126 @@
+---
+// Server-rendered and session-gated like account.astro. Every query below
+// is scoped to the session's own customer id, so there is no way to read
+// another customer's orders by editing the URL.
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { sql } from '../../lib/db';
+import { getSessionCustomer, SESSION_COOKIE } from '../../lib/auth';
+
+const token = Astro.cookies.get(SESSION_COOKIE)?.value;
+const customer = token ? await getSessionCustomer(token) : null;
+
+if (!customer) {
+  return Astro.redirect('/login?redirect=/account/orders');
+}
+
+interface OrderRow {
+  id: number;
+  status: string;
+  fiuu_orderid: string;
+  items: { slug: string; name: string; price: number; qty: number; image: string | null }[];
+  subtotal: string;
+  discount_percent: string;
+  discount_amount: string;
+  shipping_cost: string;
+  total: string;
+  fulfillment_method: 'pickup' | 'delivery';
+  shipping_address: { line1: string; line2: string | null; city: string; postcode: string; state: string } | null;
+  order_date: Date;
+}
+
+const PAGE_SIZE = 20;
+const requested = parseInt(Astro.url.searchParams.get('limit') || '', 10);
+const limit = Number.isFinite(requested) && requested > PAGE_SIZE ? Math.min(requested, 200) : PAGE_SIZE;
+
+// Only orders that were actually paid (plus the rare post-payment stock
+// problem, which staff follow up on) — abandoned or cancelled checkouts
+// are never shown.
+const rows = await sql<OrderRow[]>`
+  SELECT id, status, fiuu_orderid, items, subtotal, discount_percent, discount_amount,
+         shipping_cost, total, fulfillment_method, shipping_address,
+         COALESCE(paid_at, created_at) AS order_date
+  FROM orders
+  WHERE customer_id = ${customer.id} AND status IN ('paid', 'fulfilled', 'payment_stock_conflict')
+  ORDER BY COALESCE(paid_at, created_at) DESC
+  LIMIT ${limit + 1}
+`;
+const hasMore = rows.length > limit;
+const orders = rows.slice(0, limit);
+
+function statusLabel(order: OrderRow): string {
+  const delivery = order.fulfillment_method === 'delivery';
+  if (order.status === 'fulfilled') return delivery ? 'Shipped' : 'Picked up';
+  if (order.status === 'payment_stock_conflict') return "We'll be in touch about this order";
+  return delivery ? "Paid — we're packing your order" : "Paid — we're getting your order ready";
+}
+
+function formatDate(value: Date): string {
+  return new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kuala_Lumpur' });
+}
+
+const money = (value: string | number) => `RM${Number(value).toFixed(2)}`;
+---
+<BaseLayout title="My Orders — Goblin's Lair">
+  <div class="page-header">
+    <div class="hero-eyebrow">Your Purchases</div>
+    <h1>My Orders</h1>
+    <a href="/account" class="btn btn-outline">&larr; Back to My Account</a>
+  </div>
+  <section class="auth">
+    <div class="orders-layout">
+      {orders.length === 0 && (
+        <p class="orders-empty">No orders yet. <a href="/products">Browse the range &rarr;</a></p>
+      )}
+
+      {orders.map((order) => (
+        <article class="order-card">
+          <div class="order-card-head">
+            <div>
+              <strong>{formatDate(order.order_date)}</strong>
+              <span class="order-ref">Order {order.fiuu_orderid}</span>
+            </div>
+            <span class="fulfillment-badge">{order.fulfillment_method === 'delivery' ? 'Delivery' : 'Pickup'}</span>
+          </div>
+
+          <p class={`order-status is-${order.status}`}>{statusLabel(order)}</p>
+
+          <ul class="order-items">
+            {order.items.map((item) => (
+              <li>
+                <div class="order-item-img" style={item.image ? `background-image:url(${item.image});` : undefined}></div>
+                <div class="order-item-info">
+                  <a href={`/products/${item.slug}`}>{item.name}</a>
+                  <span>Qty {item.qty} &middot; {money(item.price)} each</span>
+                </div>
+                <span class="order-item-total">{money(item.price * item.qty)}</span>
+              </li>
+            ))}
+          </ul>
+
+          <dl class="order-totals">
+            <div><dt>Subtotal</dt><dd>{money(order.subtotal)}</dd></div>
+            {Number(order.discount_amount) > 0 && (
+              <div><dt>Member discount ({Number(order.discount_percent)}%)</dt><dd>&minus;{money(order.discount_amount)}</dd></div>
+            )}
+            {Number(order.shipping_cost) > 0 && (
+              <div><dt>Shipping</dt><dd>{money(order.shipping_cost)}</dd></div>
+            )}
+            <div class="order-totals-grand"><dt>Total paid</dt><dd>{money(order.total)}</dd></div>
+          </dl>
+
+          {order.fulfillment_method === 'delivery' && order.shipping_address && (
+            <p class="shipping-address">
+              Delivered to: {order.shipping_address.line1}{order.shipping_address.line2 ? `, ${order.shipping_address.line2}` : ''}, {order.shipping_address.postcode} {order.shipping_address.city}, {order.shipping_address.state}
+            </p>
+          )}
+        </article>
+      ))}
+
+      {hasMore && (
+        <p class="orders-more"><a href={`/account/orders?limit=${limit + PAGE_SIZE}`} class="btn btn-outline">Load more</a></p>
+      )}
+    </div>
+  </section>
+</BaseLayout>
