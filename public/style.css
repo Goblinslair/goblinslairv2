@@ -1209,6 +1209,8 @@ section{ padding: 100px 32px; }
   margin-bottom: 16px;
 }
 .account-section p{ color: rgba(42,26,18,0.8); font-size: 0.95rem; }
+.auth .btn-outline{ color: var(--maroon); border-color: rgba(42,26,18,0.35); }
+.auth .btn-outline:hover{ border-color: var(--maroon); color: var(--cream); background: var(--maroon); }
 
 .admin-list{ list-style: none; padding: 0; margin-top: 12px; }
 .admin-list li{
