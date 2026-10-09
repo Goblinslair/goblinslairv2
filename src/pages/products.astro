@@ -71,8 +71,11 @@ type FilterEntry = {
   nameContains?: string;
 };
 
-const CATEGORY_LABEL_OVERRIDES: Record<string, string> = {
-  "ADEPTUS / LEGIO CUSTODES": "Adeptus Custodes",
+// Categories that belong to more than one game system get their drawer row
+// listed under each extra group too (their primary group still comes from
+// groupFor()). Custodes cover both current 40k and Horus Heresy-era models.
+const ALSO_LISTED_UNDER: Record<string, string[]> = {
+  "CUSTODES": ["The Horus Heresy"],
 };
 
 // Categories listed here skip their game-system group entirely and render
@@ -95,7 +98,7 @@ const groupsMap = new Map(GROUP_ORDER.map((label) => [label, [] as FilterEntry[]
 for (const category of categories) {
   const slug = slugify(category);
   const entry: FilterEntry = {
-    label: CATEGORY_LABEL_OVERRIDES[category] || toTitleCase(category),
+    label: toTitleCase(category),
     filter: slug,
     categoryMatch: slug,
   };
@@ -104,22 +107,10 @@ for (const category of categories) {
     rootEntries.push(entry);
   } else {
     groupsMap.get(groupFor(category))!.push(entry);
+    for (const extraGroup of ALSO_LISTED_UNDER[category] ?? []) {
+      groupsMap.get(extraGroup)!.push(entry);
+    }
   }
-}
-
-// Adeptus / Legio Custodes is one Loyverse category spanning two product
-// lines: current "Adeptus Custodes" (40k) and Horus Heresy-era "Legio
-// Custodes". The Adeptus Custodes filter above already covers all of
-// them; this adds a second, narrower entry under Horus Heresy that only
-// matches products actually named "Legio Custodes: ...".
-const custodesSlug = slugify("ADEPTUS / LEGIO CUSTODES");
-if (products.some((p) => /^legio custodes/i.test(p.data.name))) {
-  groupsMap.get('The Horus Heresy')!.push({
-    label: "Legio Custodes",
-    filter: 'legio-custodes-heresy',
-    categoryMatch: custodesSlug,
-    namePrefix: 'legio custodes',
-  });
 }
 
 // Combat Patrol boxes exist per-faction (Combat Patrol: Necrons, Combat
@@ -142,15 +133,13 @@ const groups = GROUP_ORDER
   .filter((g) => g.entries.length > 0);
 
 // A product's primary game system is groupFor(category), but it can also
-// surface under a *different* group's own drawer entry — e.g. Legio
-// Custodes products are raw-categorized under 40k (shared with "Adeptus
-// Custodes"), but the drawer deliberately also lists them under Horus
-// Heresy via a narrower name-prefix entry (see the comment above
-// `custodesSlug` below). "All <group>" needs to match everything that
-// group's own entries would surface, not just each product's one primary
-// bucket, or it'd silently show fewer results than the group's own leaf
-// filters do. data-system lists every group a product actually matches,
-// space-separated.
+// surface under a *different* group's own drawer entry — e.g. Custodes
+// products are categorized under 40k but the drawer also lists them under
+// Horus Heresy (see ALSO_LISTED_UNDER above). "All <group>" needs to match
+// everything that group's own entries would surface, not just each
+// product's one primary bucket, or it'd silently show fewer results than
+// the group's own leaf filters do. data-system lists every group a product
+// actually matches, space-separated.
 function systemsFor(product: (typeof products)[number]): string {
   const categorySlug = slugify(product.data.category);
   const nameLower = product.data.name.toLowerCase();
