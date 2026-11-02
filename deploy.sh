@@ -25,7 +25,7 @@ set -euo pipefail
 
 HOST="${GOBLINS_HOST:-159.65.171.134}"
 KEY="${GOBLINS_KEY:-$HOME/.ssh/grademaster_vps}"
-SITE_URL="${GOBLINS_SITE_URL:?Set GOBLINS_SITE_URL to the site's public URL, e.g. https://example.com}"
+SITE_URL="${GOBLINS_SITE_URL:?Set GOBLINS_SITE_URL to the public URL of the site, e.g. https://example.com}"
 APP_USER="goblins"
 APP_DIR="/srv/goblinslair"
 SERVICE="goblinslair"
