@@ -15,8 +15,9 @@ const WEBP_QUALITY = 80;
 // Content-Type is multipart/form-data or urlencoded unless the Origin header
 // lines up exactly right, which real-world proxies/browsers don't always
 // send; every other admin route already avoids this by using JSON bodies.
-// Base64 inflates size ~33%, and Vercel's Node function body limit is
-// 4.5MB, so cap the raw file well under that.
+// Base64 inflates size ~33%, and both hosts cap the request body — Vercel's
+// Node function limit is 4.5MB, and the droplet's nginx block for this site
+// sets client_max_body_size 5m — so cap the raw file well under both.
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 
 export const POST: APIRoute = async ({ request, cookies }) => {

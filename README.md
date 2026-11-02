@@ -32,9 +32,13 @@ to `/blog/2`, `/blog/3`, and so on as new ones are added.
 ## Deploying
 - **Vercel (current hosting):** connect this repo (via GitHub import or
   `vercel git connect`) and it will auto-detect Astro — no config needed.
-- **Traditional web host (future):** run `npm run build` locally, which
-  produces a plain static `dist/` folder of HTML/CSS/JS. Upload the contents
-  of `dist/` to any web server, same as any static site.
+- **DigitalOcean droplet (in progress):** from the `krispy` branch, with a
+  clean working tree, run
+  `GOBLINS_SITE_URL=https://your-domain ./deploy.sh`. It builds locally with
+  the Node adapter, uploads a new release to `/srv/goblinslair` on the
+  droplet, restarts the `goblinslair` service, and switches back to the
+  previous release if the new one doesn't answer. It does not use GitHub or
+  Vercel, so it can't affect the Vercel site.
 
 ## Adding real photography
 Drop files into `src/assets/images/` using these names — `.jpg`, `.jpeg`, and

@@ -1,6 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel';
+import node from '@astrojs/node';
 import sitemap from '@astrojs/sitemap';
 
 // No production domain assigned yet - set SITE_URL in Vercel's env vars once
@@ -16,6 +17,20 @@ const productSlugs = readdirSync(new URL('./src/content/products/', import.meta.
   .filter((f) => f.endsWith('.json'))
   .map((f) => f.replace(/\.json$/, ''));
 
+// Two hosts, picked at build time. A plain `npm run build` (what Vercel runs)
+// keeps the Vercel adapter, so production is untouched. `deploy.sh` builds
+// with DEPLOY_TARGET=node for the DigitalOcean droplet, where a standalone
+// Node server sits behind nginx (and Cloudflare in front of that).
+const isNode = process.env.DEPLOY_TARGET === 'node';
+
+// Behind a proxy, every request reaches Node from 127.0.0.1, so
+// `clientAddress` (the key the login/signup rate limits count by) would put
+// every visitor in one shared bucket. Astro only trusts X-Forwarded-For for
+// hostnames listed here, so name the site's own. nginx overwrites that header
+// with the real visitor IP, and only believes Cloudflare's address ranges
+// when doing so — see the droplet's nginx block for this site.
+const allowedDomains = isNode ? [{ hostname: new URL(site).hostname }] : [];
+
 // output: 'static' by default — most pages still build to plain HTML/CSS/JS
 // with no server involved. Individual routes can opt into server rendering
 // with `export const prerender = false` (used by the product item page,
@@ -23,7 +38,7 @@ const productSlugs = readdirSync(new URL('./src/content/products/', import.meta.
 // pre-building one HTML file per product).
 export default defineConfig({
   output: 'static',
-  adapter: vercel(),
+  adapter: isNode ? node({ mode: 'standalone' }) : vercel(),
   site,
   // Astro's default CSRF check (security.checkOrigin) rejects any
   // form-content-type POST (x-www-form-urlencoded/multipart/text-plain)
@@ -39,6 +54,7 @@ export default defineConfig({
   // payment confirmation, permanently and silently.
   security: {
     checkOrigin: false,
+    allowedDomains,
   },
   integrations: [
     sitemap({
@@ -47,7 +63,8 @@ export default defineConfig({
   ],
   // sharp ships a native .node binary (used by src/pages/api/admin/upload.ts)
   // that the server bundler can't inline — keep it external so Vercel's file
-  // tracer picks up the real platform binary instead of a broken bundled stub.
+  // tracer (or, on the droplet, `npm ci` there) picks up the real platform
+  // binary instead of a broken bundled stub.
   vite: {
     ssr: {
       external: ['sharp'],
