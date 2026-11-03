@@ -7,14 +7,13 @@
 export const prerender = false;
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import { getProduct } from '../../lib/products';
 import { sanitizeHtml, stripHtml } from '../../lib/html';
 import { getStoreId, getLiveStockForVariant } from '../../lib/loyverse-stock';
 import { getReservedQtyForVariant } from '../../lib/reservations';
 
 const { slug } = Astro.params;
-const products = await getCollection('products');
-const product = products.find((p) => p.id === slug);
+const product = slug ? await getProduct(slug) : undefined;
 
 if (!product) Astro.response.status = 404;
 

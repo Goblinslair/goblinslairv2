@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@astrojs/node": "^11.1.9",
-    "@astrojs/sitemap": "^3.7.3",
     "@astrojs/vercel": "^11.0.7",
     "@vercel/blob": "^0.27.1",
     "astro": "^7.2.4",

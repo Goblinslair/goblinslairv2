@@ -104,3 +104,21 @@ CREATE TABLE orders (
 -- reserved" query) and by the admin list's pending/paid filters.
 CREATE INDEX orders_reservation_idx ON orders (status, reserved_until);
 CREATE INDEX orders_customer_idx ON orders (customer_id);
+
+-- Product catalog, synced from Loyverse POS by src/lib/product-sync.ts
+-- (hourly timer on the droplet, or the admin "Sync products now" button).
+-- Loyverse stays the source of truth: never edit these rows by hand, the
+-- next sync overwrites them. `stock` is only a fallback snapshot - pages
+-- overlay live Loyverse stock per request (src/lib/loyverse-stock.ts).
+CREATE TABLE products (
+  slug TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL,
+  price NUMERIC(10,2) NOT NULL,
+  image TEXT,
+  sku TEXT,
+  stock INTEGER,
+  variant_id TEXT,
+  synced_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

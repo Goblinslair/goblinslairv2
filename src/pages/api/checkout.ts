@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getAllProducts } from '../../lib/products';
 import { sql } from '../../lib/db';
 import { getSessionCustomer, SESSION_COOKIE } from '../../lib/auth';
 import { getMembershipTier } from '../../lib/loyverse';
@@ -76,7 +76,7 @@ export const POST: APIRoute = async ({ request, cookies, site, url }) => {
     return new Response(JSON.stringify({ error: 'Your cart is empty.' }), { status: 400 });
   }
 
-  const products = await getCollection('products');
+  const products = await getAllProducts();
   const storeId = await getStoreId();
 
   const orderItems: { slug: string; name: string; price: number; qty: number; variantId: string | null; image: string | null }[] = [];
@@ -106,7 +106,7 @@ export const POST: APIRoute = async ({ request, cookies, site, url }) => {
       }
     }
 
-    // Re-derive price/name from the product collection, never trust the
+    // Re-derive price/name from the products table, never trust the
     // client-cached cart price for money math.
     orderItems.push({
       slug: product.id,

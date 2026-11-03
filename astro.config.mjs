@@ -1,21 +1,12 @@
-import { readdirSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel';
 import node from '@astrojs/node';
-import sitemap from '@astrojs/sitemap';
 
 // No production domain assigned yet - set SITE_URL in Vercel's env vars once
-// one is. Everything below (sitemap, canonical tags, OG/Twitter meta,
-// LocalBusiness schema) reads Astro.site, so this is the one line to fix.
+// one is. Everything below (canonical tags, OG/Twitter meta, LocalBusiness
+// schema, src/pages/sitemap.xml.ts) reads Astro.site, so this is the one
+// line to fix.
 const site = process.env.SITE_URL || 'https://example.com';
-
-// products/[slug] opts into server rendering (see below), so Astro's own
-// build manifest never sees those routes and the sitemap integration can't
-// find them automatically. Read the same synced JSON files sync-products.mjs
-// writes and list them explicitly instead.
-const productSlugs = readdirSync(new URL('./src/content/products/', import.meta.url))
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => f.replace(/\.json$/, ''));
 
 // Two hosts, picked at build time. A plain `npm run build` (what Vercel runs)
 // keeps the Vercel adapter, so production is untouched. `deploy.sh` builds
@@ -56,11 +47,6 @@ export default defineConfig({
     checkOrigin: false,
     allowedDomains,
   },
-  integrations: [
-    sitemap({
-      customPages: productSlugs.map((slug) => `${site}/products/${slug}`),
-    }),
-  ],
   // sharp ships a native .node binary (used by src/pages/api/admin/upload.ts)
   // that the server bundler can't inline — keep it external so Vercel's file
   // tracer (or, on the droplet, `npm ci` there) picks up the real platform

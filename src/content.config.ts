@@ -10,21 +10,8 @@ const blog = defineCollection({
   }),
 });
 
-// Synced from Loyverse POS via `npm run sync-products` (see scripts/sync-products.mjs).
-// Files in src/content/products/ are generated output, not hand-authored.
-const products = defineCollection({
-  loader: glob({ pattern: '**/*.json', base: './src/content/products' }),
-  schema: z.object({
-    name: z.string(),
-    description: z.string().default(''),
-    category: z.string(),
-    price: z.number(),
-    image: z.string().nullable().default(null),
-    sku: z.string().nullable().default(null),
-    stock: z.number().nullable().default(null),
-    variantId: z.string().nullable().default(null),
-  }),
-});
+// Products are not a collection: they live in the `products` database
+// table (see src/lib/products.ts and src/lib/product-sync.ts).
 
 const events = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/events' }),
@@ -36,4 +23,4 @@ const events = defineCollection({
   }),
 });
 
-export const collections = { blog, products, events };
+export const collections = { blog, events };

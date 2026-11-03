@@ -1,12 +1,12 @@
 ---
 // Server-rendered (not static) so stock can be overlaid with a live
 // Loyverse lookup on every view — see the live-stock block below. Name,
-// price, description, category, image still come from the synced content
-// collection, since those don't change when someone buys something.
+// price, description, category, image still come from the synced products
+// table, since those don't change when someone buys something.
 export const prerender = false;
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import { getAllProducts } from '../lib/products';
 import { getStoreId, getLiveStockMap } from '../lib/loyverse-stock';
 import { getReservedQtyMap } from '../lib/reservations';
 import { slugify, groupFor, GROUP_ORDER } from '../lib/product-groups';
@@ -22,7 +22,7 @@ function toTitleCase(name: string) {
     .join(' ');
 }
 
-const products = await getCollection('products');
+const products = await getAllProducts();
 
 // Overlay live stock from Loyverse on top of the synced snapshot — the one
 // field that actually changes when someone buys something in-store. Falls

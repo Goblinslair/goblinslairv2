@@ -81,8 +81,16 @@ try {
         <h3>Orders</h3>
         <p><a href="/admin/orders" class="btn btn-primary">View Orders</a></p>
       </div>
+
+      <div class="account-section">
+        <h3>Products</h3>
+        <p>Products and stock come from Loyverse. Change them there, not here. The website picks up changes every hour by itself, or press this to do it now.</p>
+        <p><button type="button" class="btn btn-primary" id="admin-sync-btn">Sync Products Now</button></p>
+        <p class="form-status" id="admin-sync-status" role="status"></p>
+      </div>
     </div>
   </section>
 </BaseLayout>
 
 <script src="/admin-logout.js" is:inline></script>
+<script src="/admin-sync.js" is:inline></script>
