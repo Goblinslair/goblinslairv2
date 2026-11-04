@@ -3,19 +3,21 @@ export const prerender = false;
 
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../../../lib/admin-auth';
-import { getFile } from '../../../../lib/github-content';
-import { parseFrontmatter } from '../../../../lib/markdown';
+import { sql } from '../../../../lib/db';
+import { toDateInput } from '../../../../lib/content';
 
 const token = Astro.cookies.get(ADMIN_SESSION_COOKIE)?.value;
 const isAdmin = token ? await isValidAdminSession(token) : false;
 if (!isAdmin) return Astro.redirect('/admin/login');
 
 const { slug } = Astro.params;
-const file = await getFile(`src/content/events/${slug}.md`);
-if (!file) {
+const rows = await sql<{ title: string; date: Date; excerpt: string; image: string | null }[]>`
+  SELECT title, date, excerpt, image FROM events WHERE slug = ${slug ?? ''}
+`;
+const event = rows[0] ? { ...rows[0], date: toDateInput(rows[0].date) } : null;
+if (!event) {
   Astro.response.status = 404;
 }
-const event = file ? parseFrontmatter(file.content) : null;
 ---
 <BaseLayout title="Edit Event — Goblin's Lair">
   <div class="page-header">

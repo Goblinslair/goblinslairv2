@@ -1,15 +1,31 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
-import type { GetStaticPathsOptions } from 'astro';
+// Rendered per request so a post saved in /admin shows straight away.
+// Pages are ?page=2, ?page=3... rather than /blog/2: /blog/[slug] would
+// otherwise claim those URLs now that neither route is pre-built.
+export const prerender = false;
 
-export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
-  const allPosts = await getCollection('blog');
-  const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-  return paginate(posts, { pageSize: 9 });
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { listPosts } from '../../lib/content';
+
+const PAGE_SIZE = 9;
+const allPosts = await listPosts();
+const lastPage = Math.max(1, Math.ceil(allPosts.length / PAGE_SIZE));
+const pageParam = Astro.url.searchParams.get('page');
+const currentPage = pageParam === null ? 1 : Number(pageParam);
+if (!Number.isInteger(currentPage) || currentPage < 1 || currentPage > lastPage) {
+  return Astro.redirect('/blog');
 }
 
-const { page } = Astro.props;
+const pageUrl = (n: number) => (n === 1 ? '/blog' : `/blog?page=${n}`);
+const page = {
+  currentPage,
+  lastPage,
+  data: allPosts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+  url: {
+    prev: currentPage > 1 ? pageUrl(currentPage - 1) : undefined,
+    next: currentPage < lastPage ? pageUrl(currentPage + 1) : undefined,
+  },
+};
 const isFirstPage = page.currentPage === 1;
 const [featured, ...rest] = isFirstPage ? page.data : [undefined, ...page.data];
 

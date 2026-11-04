@@ -1,17 +1,14 @@
 ---
+// Rendered per request so a post saved in /admin shows straight away.
+export const prerender = false;
+
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection, render } from 'astro:content';
+import { getPost, renderMarkdown } from '../../lib/content';
 
-export async function getStaticPaths() {
-  const posts = await getCollection('blog');
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
-  }));
-}
-
-const { post } = Astro.props;
-const { Content } = await render(post);
+const post = Astro.params.slug ? await getPost(Astro.params.slug) : undefined;
+// An empty 404 makes Astro serve the site's own 404 page.
+if (!post) return new Response(null, { status: 404 });
+const contentHtml = renderMarkdown(post.body);
 
 function formatDate(d: Date) {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -19,8 +16,8 @@ function formatDate(d: Date) {
 
 // Marks this page as an article for Google (headline/date/description),
 // same "works fine before SITE_URL is set" reasoning as the product page's
-// Product schema. No image field exists on the blog schema (src/content.config.ts
-// only has title/date/excerpt) — image is optional on BlogPosting, so it's
+// Product schema. No image field exists on a blog post (the blog_posts
+// table only has title/date/excerpt/body) — image is optional on BlogPosting, so it's
 // just omitted rather than trying to pull one out of the post body.
 const articleJsonLd = {
   '@context': 'https://schema.org',
@@ -41,7 +38,7 @@ const articleJsonLd = {
 
   <section class="blog">
     <article class="blog-post-body">
-      <Content />
+      <Fragment set:html={contentHtml} />
     </article>
     <p style="text-align:center; margin-top:40px;">
       <a href="/blog" class="blog-link">&larr; Back to All Posts</a>

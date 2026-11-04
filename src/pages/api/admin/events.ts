@@ -2,15 +2,29 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../../lib/admin-auth';
-import { getFile, putFile, deleteFile } from '../../../lib/github-content';
-import { buildMarkdown, parseFrontmatter } from '../../../lib/markdown';
+import { sql } from '../../../lib/db';
+import { clearContentCache, toDateInput } from '../../../lib/content';
 import { slugify } from '../../../lib/slug';
-
-const DIR = 'src/content/events';
 
 async function requireAdmin(cookies: any) {
   const token = cookies.get(ADMIN_SESSION_COOKIE)?.value;
   return token && (await isValidAdminSession(token));
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function readFields(body: any) {
+  const image = typeof body?.image === 'string' ? body.image.trim() : '';
+  return {
+    title: typeof body?.title === 'string' ? body.title.trim() : '',
+    date: typeof body?.date === 'string' ? body.date.trim() : '',
+    excerpt: typeof body?.excerpt === 'string' ? body.excerpt.trim() : '',
+    image: image || null,
+  };
+}
+
+function missingFields() {
+  return new Response(JSON.stringify({ error: 'Title, date, and excerpt are all required.' }), { status: 400 });
 }
 
 export const POST: APIRoute = async ({ request, cookies }) => {
@@ -19,25 +33,24 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 
   const body = await request.json().catch(() => null);
-  const title = typeof body?.title === 'string' ? body.title.trim() : '';
-  const date = typeof body?.date === 'string' ? body.date.trim() : '';
-  const excerpt = typeof body?.excerpt === 'string' ? body.excerpt.trim() : '';
-  const image = typeof body?.image === 'string' ? body.image.trim() : '';
-
-  if (!title || !date || !excerpt) {
-    return new Response(JSON.stringify({ error: 'Title, date, and excerpt are all required.' }), { status: 400 });
-  }
+  const { title, date, excerpt, image } = readFields(body);
+  if (!title || !DATE_RE.test(date) || !excerpt) return missingFields();
 
   const slug = slugify(title);
-  const path = `${DIR}/${slug}.md`;
+  if (!slug) {
+    return new Response(JSON.stringify({ error: 'Title needs at least one letter or number.' }), { status: 400 });
+  }
 
-  const existing = await getFile(path);
-  if (existing) {
+  const inserted = await sql`
+    INSERT INTO events (slug, title, date, excerpt, image)
+    VALUES (${slug}, ${title}, ${date}, ${excerpt}, ${image})
+    ON CONFLICT (slug) DO NOTHING
+  `;
+  if (inserted.count === 0) {
     return new Response(JSON.stringify({ error: 'An event with that title already exists.' }), { status: 409 });
   }
 
-  await putFile(path, buildMarkdown({ title, date, excerpt, image }, ''), `chore: add event "${title}" via admin panel`);
-
+  clearContentCache();
   return new Response(JSON.stringify({ ok: true, slug }), { status: 200 });
 };
 
@@ -48,23 +61,19 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
 
   const body = await request.json().catch(() => null);
   const slug = typeof body?.slug === 'string' ? body.slug.trim() : '';
-  const title = typeof body?.title === 'string' ? body.title.trim() : '';
-  const date = typeof body?.date === 'string' ? body.date.trim() : '';
-  const excerpt = typeof body?.excerpt === 'string' ? body.excerpt.trim() : '';
-  const image = typeof body?.image === 'string' ? body.image.trim() : '';
+  const { title, date, excerpt, image } = readFields(body);
+  if (!slug || !title || !DATE_RE.test(date) || !excerpt) return missingFields();
 
-  if (!slug || !title || !date || !excerpt) {
-    return new Response(JSON.stringify({ error: 'Title, date, and excerpt are all required.' }), { status: 400 });
-  }
-
-  const path = `${DIR}/${slug}.md`;
-  const existing = await getFile(path);
-  if (!existing) {
+  const updated = await sql`
+    UPDATE events
+    SET title = ${title}, date = ${date}, excerpt = ${excerpt}, image = ${image}, updated_at = now()
+    WHERE slug = ${slug}
+  `;
+  if (updated.count === 0) {
     return new Response(JSON.stringify({ error: 'Event not found.' }), { status: 404 });
   }
 
-  await putFile(path, buildMarkdown({ title, date, excerpt, image }, ''), `chore: update event "${title}" via admin panel`, existing.sha);
-
+  clearContentCache();
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
 };
 
@@ -79,14 +88,12 @@ export const DELETE: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ error: 'Missing slug.' }), { status: 400 });
   }
 
-  const path = `${DIR}/${slug}.md`;
-  const existing = await getFile(path);
-  if (!existing) {
+  const deleted = await sql`DELETE FROM events WHERE slug = ${slug}`;
+  if (deleted.count === 0) {
     return new Response(JSON.stringify({ error: 'Event not found.' }), { status: 404 });
   }
 
-  await deleteFile(path, existing.sha, `chore: delete event "${slug}" via admin panel`);
-
+  clearContentCache();
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
 };
 
@@ -100,10 +107,13 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     return new Response(JSON.stringify({ error: 'Missing slug.' }), { status: 400 });
   }
 
-  const file = await getFile(`${DIR}/${slug}.md`);
-  if (!file) {
+  const rows = await sql<{ title: string; date: Date; excerpt: string; image: string | null }[]>`
+    SELECT title, date, excerpt, image FROM events WHERE slug = ${slug}
+  `;
+  const event = rows[0];
+  if (!event) {
     return new Response(JSON.stringify({ error: 'Event not found.' }), { status: 404 });
   }
 
-  return new Response(JSON.stringify({ ...parseFrontmatter(file.content), slug }), { status: 200 });
+  return new Response(JSON.stringify({ ...event, image: event.image ?? '', date: toDateInput(event.date), slug }), { status: 200 });
 };

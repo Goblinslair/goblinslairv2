@@ -3,7 +3,6 @@
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   var els = Array.prototype.slice.call(document.querySelectorAll('[data-parallax]'));
-  if (!els.length) return;
 
   var ticking = false;
 
@@ -34,4 +33,13 @@
 
   window.addEventListener('resize', update);
   update();
+
+  // Exposed so content added after load (the homepage events section is a
+  // server island, see src/components/HomeEvents.astro) can opt in too.
+  window.glParallax = function (root) {
+    root.querySelectorAll('[data-parallax]').forEach(function (el) {
+      if (els.indexOf(el) === -1) els.push(el);
+    });
+    update();
+  };
 })();

@@ -3,19 +3,21 @@ export const prerender = false;
 
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../../../lib/admin-auth';
-import { getFile } from '../../../../lib/github-content';
-import { parseFrontmatter } from '../../../../lib/markdown';
+import { sql } from '../../../../lib/db';
+import { toDateInput } from '../../../../lib/content';
 
 const token = Astro.cookies.get(ADMIN_SESSION_COOKIE)?.value;
 const isAdmin = token ? await isValidAdminSession(token) : false;
 if (!isAdmin) return Astro.redirect('/admin/login');
 
 const { slug } = Astro.params;
-const file = await getFile(`src/content/blog/${slug}.md`);
-if (!file) {
+const rows = await sql<{ title: string; date: Date; excerpt: string; body: string }[]>`
+  SELECT title, date, excerpt, body FROM blog_posts WHERE slug = ${slug ?? ''}
+`;
+const post = rows[0] ? { ...rows[0], date: toDateInput(rows[0].date) } : null;
+if (!post) {
   Astro.response.status = 404;
 }
-const post = file ? parseFrontmatter(file.content) : null;
 ---
 <BaseLayout title="Edit Blog Post — Goblin's Lair">
   <div class="page-header">

@@ -1,0 +1,81 @@
+---
+// Homepage EVENTS section. Rendered as a server island
+// (`<HomeEvents server:defer />` in src/pages/index.astro): the homepage
+// itself stays pre-built, and this part is fetched fresh on each visit so
+// events saved in /admin show without a rebuild.
+import { listEvents } from '../lib/content';
+
+// Events come from the `events` table (added in /admin). Soonest-first,
+// capped at four. If nothing is booked in the future, fall back to the most
+// recent past events instead of showing an empty section.
+const allEvents = await listEvents(); // already soonest first
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const upcomingEvents = allEvents.filter((event) => event.data.date >= today);
+const isRecap = upcomingEvents.length === 0;
+const displayEvents = (isRecap ? [...allEvents].reverse() : upcomingEvents).slice(0, 4);
+const featuredEvent = displayEvents[0];
+
+function formatEventDate(date: Date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day} / ${month}`;
+}
+function formatFeaturedDate(date: Date) {
+  return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+}
+---
+{displayEvents.length > 0 && (
+  <section class="events">
+    <div class="watermark"></div>
+    <div class="events-layout">
+
+      <div
+        class="events-image"
+        data-parallax="0.06"
+        style={featuredEvent.data.image ? `background-image:url(${featuredEvent.data.image});background-size:cover;background-position:center;` : undefined}
+      >
+        <div class="events-feature-card">
+          <div class="efc-info">
+            <span>{isRecap ? 'Recap' : 'Featured'} &middot; {formatFeaturedDate(featuredEvent.data.date)}</span>
+            <strong>{featuredEvent.data.title}</strong>
+          </div>
+          {!isRecap && <a href="/blog" class="btn">Reserve Spot</a>}
+        </div>
+      </div>
+
+      <div class="events-list">
+        <div class="section-head">
+          <div class="section-eyebrow">{isRecap ? 'Recap' : 'Events'}</div>
+          <h2>{isRecap ? 'Recently at the Lair' : "What's On at the Lair"}</h2>
+          {isRecap && <p>Nothing booked yet for the weeks ahead — here's what we got up to last.</p>}
+        </div>
+
+        {displayEvents.map((event, i) => (
+          <div class={i === 0 ? 'event-row is-featured' : 'event-row'} data-reveal>
+            <span class="event-date">{formatEventDate(event.data.date)}</span>
+            <div class="event-info">
+              <h3>{event.data.title}</h3>
+              <p>{event.data.excerpt}</p>
+            </div>
+            <a href="/blog" class="event-link">View Details</a>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </section>
+)}
+
+{displayEvents.length > 0 && (
+  <script is:inline>
+    // This HTML arrives after the page's own scripts ran, so hand the new
+    // rows to the scroll-reveal and parallax scripts (public/).
+    (function () {
+      var section = document.querySelector('section.events');
+      if (!section) return;
+      if (window.glScrollReveal) window.glScrollReveal(section);
+      if (window.glParallax) window.glParallax(section);
+    })();
+  </script>
+)}

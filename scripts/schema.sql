@@ -122,3 +122,28 @@ CREATE TABLE products (
   variant_id TEXT,
   synced_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Blog posts and homepage events, written by the /admin panel
+-- (src/pages/api/admin/{blog,events}.ts) and read by src/lib/content.ts.
+-- The slug is set once from the title at creation and never changes.
+CREATE TABLE blog_posts (
+  slug TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  date DATE NOT NULL,
+  excerpt TEXT NOT NULL,
+  -- Markdown, rendered to HTML per request by src/lib/content.ts
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE events (
+  slug TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  date DATE NOT NULL,
+  excerpt TEXT NOT NULL,
+  -- Featured-image URL, shown only on the homepage's highlighted event card
+  image TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

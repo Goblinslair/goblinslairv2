@@ -3,8 +3,7 @@ export const prerender = false;
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { ADMIN_SESSION_COOKIE, isValidAdminSession } from '../../lib/admin-auth';
-import { listDir, getFile } from '../../lib/github-content';
-import { parseFrontmatter } from '../../lib/markdown';
+import { sql } from '../../lib/db';
 
 const token = Astro.cookies.get(ADMIN_SESSION_COOKIE)?.value;
 const isAdmin = token ? await isValidAdminSession(token) : false;
@@ -13,26 +12,19 @@ if (!isAdmin) {
   return Astro.redirect('/admin/login');
 }
 
-async function listItems(dir: string) {
-  const entries = await listDir(dir);
-  const items = await Promise.all(
-    entries.map(async (entry) => {
-      const slug = entry.name.replace(/\.md$/, '');
-      const file = await getFile(`${dir}/${slug}.md`);
-      const parsed = file ? parseFrontmatter(file.content) : null;
-      return { slug, title: parsed?.title || slug, date: parsed?.date || '' };
-    })
-  );
-  return items.sort((a, b) => (a.date < b.date ? 1 : -1));
-}
-
-let posts: Awaited<ReturnType<typeof listItems>> = [];
-let events: Awaited<ReturnType<typeof listItems>> = [];
+// Read straight from the database (not the public pages' cache) so staff
+// always see what they just saved.
+type Item = { slug: string; title: string };
+let posts: Item[] = [];
+let events: Item[] = [];
 let loadError = '';
 try {
-  [posts, events] = await Promise.all([listItems('src/content/blog'), listItems('src/content/events')]);
+  [posts, events] = await Promise.all([
+    sql<Item[]>`SELECT slug, title FROM blog_posts ORDER BY date DESC, slug`,
+    sql<Item[]>`SELECT slug, title FROM events ORDER BY date DESC, slug`,
+  ]);
 } catch (err) {
-  loadError = err instanceof Error ? err.message : 'Failed to load content from GitHub.';
+  loadError = err instanceof Error ? err.message : 'Failed to load posts and events.';
 }
 ---
 <BaseLayout title="Admin — Goblin's Lair">
