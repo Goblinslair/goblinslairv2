@@ -4,6 +4,10 @@ export const prerender = false;
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPost, renderMarkdown } from '../../lib/content';
+import { SHOW_BLOG_AND_EVENTS } from '../../lib/site-config';
+
+// Hidden for now (see src/lib/site-config.ts).
+if (!SHOW_BLOG_AND_EVENTS) return new Response(null, { status: 404 });
 
 const post = Astro.params.slug ? await getPost(Astro.params.slug) : undefined;
 // An empty 404 makes Astro serve the site's own 404 page.

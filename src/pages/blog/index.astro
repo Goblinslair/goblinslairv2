@@ -6,6 +6,10 @@ export const prerender = false;
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { listPosts } from '../../lib/content';
+import { SHOW_BLOG_AND_EVENTS } from '../../lib/site-config';
+
+// Hidden for now (see src/lib/site-config.ts). An empty 404 serves the site's 404 page.
+if (!SHOW_BLOG_AND_EVENTS) return new Response(null, { status: 404 });
 
 const PAGE_SIZE = 9;
 const allPosts = await listPosts();

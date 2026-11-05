@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import logo from '../assets/images/logo.png';
+import { SHOW_BLOG_AND_EVENTS } from '../lib/site-config';
 
 interface Props {
   title: string;
@@ -79,7 +80,7 @@ const localBusiness = {
           <li><a href="/" class={isActive('/') ? 'active' : ''}>Home</a></li>
           <li><a href="/products" class={isActive('/products') ? 'active' : ''}>Products</a></li>
           <li><a href="/about" class={isActive('/about') ? 'active' : ''}>About Us</a></li>
-          <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>
+          {SHOW_BLOG_AND_EVENTS && <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>}
           <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
           <li><a href="/cart" class={`nav-cart-link ${isActive('/cart') ? 'active' : ''}`}>Cart<span class="cart-badge" hidden>0</span></a></li>
           <li class="nav-account">
@@ -107,7 +108,7 @@ const localBusiness = {
       <li><a href="/" class={isActive('/') ? 'active' : ''}>Home</a></li>
       <li><a href="/products" class={isActive('/products') ? 'active' : ''}>Products</a></li>
       <li><a href="/about" class={isActive('/about') ? 'active' : ''}>About Us</a></li>
-      <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>
+      {SHOW_BLOG_AND_EVENTS && <li><a href="/blog" class={isActive('/blog') ? 'active' : ''}>Blog</a></li>}
       <li><a href="/contact" class={isActive('/contact') ? 'active' : ''}>Contact Us</a></li>
       <li><a href="/cart" class={`nav-cart-link ${isActive('/cart') ? 'active' : ''}`}>Cart<span class="cart-badge" hidden>0</span></a></li>
       <li class="nav-account">
@@ -129,7 +130,7 @@ const localBusiness = {
       <a href="/">Home</a>
       <a href="/products">Products</a>
       <a href="/about">About Us</a>
-      <a href="/blog">Blog</a>
+      {SHOW_BLOG_AND_EVENTS && <a href="/blog">Blog</a>}
       <a href="/contact">Contact Us</a>
       <a href="/terms">Terms &amp; Conditions</a>
     </div>

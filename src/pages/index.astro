@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getImage } from 'astro:assets';
 import HomeEvents from '../components/HomeEvents.astro';
+import { SHOW_BLOG_AND_EVENTS } from '../lib/site-config';
 import type { ImageMetadata } from 'astro';
 import { slugify } from '../lib/product-groups';
 
@@ -165,7 +166,7 @@ const factionHobbyImage = await backgroundStyle('faction-hobby', 800);
   <!-- EVENTS: a server island, so this page stays pre-built (its photos are
        optimised once at build time) while events saved in /admin still show
        on the next visit. -->
-  <HomeEvents server:defer />
+  {SHOW_BLOG_AND_EVENTS && <HomeEvents server:defer />}
 
   <!-- FACTION INTRO -->
   <section class="products">
