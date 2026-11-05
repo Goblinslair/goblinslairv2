@@ -20,6 +20,10 @@ const EXCLUDED_CATEGORIES = new Set(
     'Deposit',
     'Food and Drinks',
     'Gaming Tools',
+    // Hidden for now, to be added back when there is more range (remove the
+    // two lines below and sync again to bring them back).
+    'Black Library',
+    'White Dwarf',
     'Membership',
     'Painting & Modelling Tools',
     'Payments & Services',
