@@ -57,6 +57,6 @@
   // If the viewport is resized past the mobile breakpoint while open
   // (e.g. rotating a tablet), reset so the desktop nav isn't hidden behind it
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 800) closeMenu();
+    if (window.innerWidth > 1000) closeMenu();
   });
 })();
