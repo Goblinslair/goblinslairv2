@@ -1,0 +1,314 @@
+#!/usr/bin/env bash
+#
+# goblinslair-ctl: the fixed set of "levers" for running the Goblin's Lair
+# site on the droplet. Installed as /usr/local/sbin/goblinslair-ctl (owned by
+# root, mode 755) by deployment/install.sh.
+#
+# The shop owner's login (goblinstarv) may run this, and only this, as root
+# through one sudoers line (deployment/sudoers-goblinslair). So everything
+# below must stay narrow:
+#   - it only touches /srv/goblinslair and the goblinslair service
+#   - every argument is checked against a strict pattern
+#   - nothing from the caller's environment is trusted
+#
+# Run `goblinslair-ctl help` for the list of commands.
+
+set -euo pipefail
+umask 022
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+APP_DIR=/srv/goblinslair
+RELEASES="${APP_DIR}/releases"
+UPLOADS="${APP_DIR}/deployment"
+CURRENT="${APP_DIR}/current"
+ENV_FILE="${APP_DIR}/shared/.env"
+APP_USER=goblins
+SERVICE=goblinslair
+PORT=4321
+KEEP_RELEASES=3
+UPLOAD_MAX_AGE_MIN=1440          # unused uploads are deleted after 24 hours
+LOG_FILE=/var/log/goblinslair-ctl.log
+LOCK_FILE=/run/goblinslair-ctl.lock
+RELEASE_PATTERN='^[0-9]{14}-[0-9a-f]{7,40}$'
+
+caller="${SUDO_USER:-$(id -un)}"
+
+say()  { printf '%s\n' "$*"; }
+fail() { printf 'error: %s\n' "$*" >&2; log "FAILED: $*"; exit 1; }
+log()  { printf '%s user=%s %s\n' "$(date -Is)" "$caller" "$*" >> "$LOG_FILE" 2>/dev/null || true; }
+
+usage() {
+  cat <<'EOF'
+goblinslair-ctl: manage the Goblin's Lair website on this server.
+
+Run with sudo, e.g.  sudo goblinslair-ctl status
+
+  status              Live release, service state and a home page check.
+  releases            List releases on the server (newest first, * = live).
+  logs [LINES]        Last LINES (default 100, max 2000) lines of the site's log.
+  restart             Restart the site.
+  deploy RELEASE      Put an uploaded build live (see below).
+  rollback            Go back to the release before the live one.
+  switch RELEASE      Make any release already on the server live (e.g. undo a rollback).
+  help                This text.
+
+Deploying:
+  1. Build on your own machine:   DEPLOY_TARGET=node SITE_URL=https://goblinslair.com.my npm run build
+  2. Upload dist/, package.json and package-lock.json to
+       /srv/goblinslair/deployment/RELEASE/
+     where RELEASE looks like 20261104165905-752c208: the current UTC time
+     (date -u +%Y%m%d%H%M%S), then the git commit.
+  3. Run:  sudo goblinslair-ctl deploy RELEASE
+  deploy.sh in the repo does all three steps for you.
+
+  deploy installs packages, switches the site over, restarts it and checks
+  the home page. If the check fails it switches straight back and deletes the
+  broken release. It keeps the newest 3 releases and never deletes the live
+  one. Uploads that are never deployed are deleted after 24 hours.
+
+Anything else (nginx, domains, certificates, the .env secrets) is not
+available here: ask the server admin.
+EOF
+}
+
+need_root() {
+  [ "$(id -u)" = 0 ] || fail "run this with sudo: sudo goblinslair-ctl $*"
+}
+
+valid_release() {
+  [[ "$1" =~ $RELEASE_PATTERN ]]
+}
+
+# A new release's name must carry the current UTC time (within an hour).
+# Names sort by time, so one made with a local clock (e.g. Malaysia, UTC+8)
+# would sort wrongly and make rollback pick the wrong release.
+fresh_utc_name() {
+  local ts="${1%%-*}" then now
+  then="$(date -u -d "${ts:0:8} ${ts:8:2}:${ts:10:2}:${ts:12:2}" +%s 2>/dev/null)" || return 1
+  now="$(date -u +%s)"
+  [ $((now - then)) -le 3600 ] && [ $((then - now)) -le 3600 ]
+}
+
+live_release() {
+  local target
+  target="$(readlink -f "$CURRENT" 2>/dev/null || true)"
+  [ -n "$target" ] && basename "$target"
+}
+
+# Release folder names, newest first. Names start with a timestamp, so a
+# reverse name sort is a reliable "newest first", unlike file times.
+release_names() {
+  local d
+  for d in "$RELEASES"/*/; do
+    [ -d "$d" ] || continue
+    d="$(basename "$d")"
+    valid_release "$d" && printf '%s\n' "$d"
+  done | sort -r
+}
+
+site_host() {
+  local url
+  url="$(grep -m1 '^SITE_URL=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr -d '"'"'"' ' || true)"
+  url="${url#*://}"
+  url="${url%%/*}"
+  [[ "$url" =~ ^[A-Za-z0-9.-]+$ ]] && printf '%s' "$url" || printf 'goblinslair.com.my'
+}
+
+home_code() {
+  curl -s -o /dev/null -m 10 -w '%{http_code}' -H "Host: $(site_host)" "http://127.0.0.1:${PORT}/" || true
+}
+
+wait_healthy() {
+  local code="" _
+  for _ in $(seq 1 20); do
+    sleep 1
+    code="$(home_code)"
+    [ "$code" = 200 ] && break
+  done
+  printf '%s' "$code"
+}
+
+point_current_at() {
+  ln -sfn "${RELEASES}/$1" "${APP_DIR}/current.tmp"
+  mv -T "${APP_DIR}/current.tmp" "$CURRENT"
+}
+
+prune_releases() {
+  local live n=0 name
+  live="$(live_release || true)"
+  while IFS= read -r name; do
+    n=$((n + 1))
+    [ "$n" -le "$KEEP_RELEASES" ] && continue
+    [ "$name" = "$live" ] && continue
+    rm -rf -- "${RELEASES:?}/${name}"
+    say "removed old release ${name}"
+  done < <(release_names)
+}
+
+prune_uploads() {
+  [ -d "$UPLOADS" ] || return 0
+  find "$UPLOADS" -mindepth 1 -maxdepth 1 -mmin +"$UPLOAD_MAX_AGE_MIN" -exec rm -rf -- {} + 2>/dev/null || true
+}
+
+with_lock() {
+  exec 9>"$LOCK_FILE"
+  flock -n 9 || fail "another goblinslair-ctl command is running; try again in a minute"
+}
+
+# --- commands ----------------------------------------------------------------
+
+cmd_status() {
+  local live state since
+  live="$(live_release || true)"
+  state="$(systemctl is-active "$SERVICE" 2>/dev/null || true)"
+  since="$(systemctl show -p ActiveEnterTimestamp --value "$SERVICE" 2>/dev/null || true)"
+  say "live release : ${live:-none}"
+  say "service      : ${state} (since ${since:-?})"
+  say "home page    : $(home_code) for $(site_host)"
+  say "disk free    : $(df -h / | awk 'NR==2 {print $4}')"
+}
+
+cmd_releases() {
+  local live name
+  live="$(live_release || true)"
+  while IFS= read -r name; do
+    if [ "$name" = "$live" ]; then say "* ${name}"; else say "  ${name}"; fi
+  done < <(release_names)
+}
+
+cmd_logs() {
+  local lines="${1:-100}"
+  [[ "$lines" =~ ^[0-9]{1,4}$ ]] && [ "$lines" -ge 1 ] && [ "$lines" -le 2000 ] \
+    || fail "LINES must be a number from 1 to 2000"
+  journalctl -u "$SERVICE" -n "$lines" --no-pager
+}
+
+cmd_restart() {
+  with_lock
+  log "restart"
+  systemctl restart "$SERVICE"
+  local code
+  code="$(wait_healthy)"
+  say "home page: ${code}"
+  [ "$code" = 200 ] || fail "site did not come back after restart (home page ${code}); see: goblinslair-ctl logs"
+}
+
+cmd_deploy() {
+  local name="${1:-}"
+  valid_release "$name" || fail "RELEASE must look like 20261104165905-752c208"
+  fresh_utc_name "$name" || fail "RELEASE must start with the current UTC time (date -u +%Y%m%d%H%M%S); server time is $(date -u +%Y%m%d%H%M%S)"
+  with_lock
+  log "deploy ${name}"
+
+  local src="${UPLOADS}/${name}" dest="${RELEASES}/${name}"
+  [ -e "$dest" ] && fail "release ${name} is already on the server"
+  [ -e "$src" ] || [ -L "$src" ] || fail "nothing uploaded at ${src}"
+
+  # Move first, check second: once it is inside root-owned releases/, the
+  # uploader can no longer swap it for something else.
+  mv -T -- "$src" "$dest"
+  if [ -L "$dest" ] || [ ! -d "$dest" ]; then
+    rm -f -- "$dest"
+    fail "upload ${name} is not a plain folder"
+  fi
+  local f
+  for f in dist/server/entry.mjs package.json package-lock.json; do
+    if [ ! -f "${dest}/${f}" ] || [ -L "${dest}/${f}" ]; then
+      rm -rf -- "$dest"
+      fail "upload ${name} is missing ${f}"
+    fi
+  done
+  chown -hR "${APP_USER}:${APP_USER}" "$dest"
+
+  say "installing production packages"
+  if ! runuser -u "$APP_USER" -- env HOME="$APP_DIR" npm --prefix "$dest" ci --omit=dev --no-audit --no-fund; then
+    rm -rf -- "$dest"
+    fail "npm ci failed; nothing was switched"
+  fi
+
+  local previous
+  previous="$(live_release || true)"
+
+  say "switching live site to ${name}"
+  point_current_at "$name"
+  systemctl restart "$SERVICE"
+
+  local code
+  code="$(wait_healthy)"
+  say "home page: ${code}"
+  if [ "$code" != 200 ]; then
+    journalctl -u "$SERVICE" -n 30 --no-pager >&2 || true
+    if [ -n "$previous" ] && [ -d "${RELEASES}/${previous}" ]; then
+      say "switching back to ${previous}"
+      point_current_at "$previous"
+      systemctl restart "$SERVICE"
+    fi
+    rm -rf -- "$dest"
+    fail "release ${name} did not answer with 200; switched back to ${previous:-nothing} and deleted it"
+  fi
+
+  prune_releases
+  prune_uploads
+  log "deploy ${name} OK (was ${previous:-none})"
+  say "done: ${name} is live"
+}
+
+# Make an existing release live, with the same check and switch-back as deploy.
+switch_to() {
+  local target="$1" live="$2" code
+  point_current_at "$target"
+  systemctl restart "$SERVICE"
+  code="$(wait_healthy)"
+  say "home page: ${code}"
+  if [ "$code" != 200 ]; then
+    if [ -n "$live" ] && [ -d "${RELEASES}/${live}" ]; then
+      point_current_at "$live"
+      systemctl restart "$SERVICE"
+    fi
+    fail "${target} did not answer with 200; stayed on ${live:-nothing}"
+  fi
+  log "switch to ${target} OK (was ${live:-none})"
+  say "done: ${target} is live (was ${live:-none})"
+}
+
+cmd_rollback() {
+  with_lock
+  local live target="" name
+  live="$(live_release || true)"
+  # The newest release older than the live one.
+  while IFS= read -r name; do
+    if [ -n "$live" ] && [[ "$name" < "$live" ]]; then target="$name"; break; fi
+  done < <(release_names)
+  [ -n "$target" ] || fail "no older release to roll back to"
+  log "rollback ${live:-none} -> ${target}"
+  switch_to "$target" "$live"
+}
+
+cmd_switch() {
+  local target="${1:-}" live
+  valid_release "$target" || fail "RELEASE must look like 20261104165905-752c208 (see: goblinslair-ctl releases)"
+  [ -d "${RELEASES}/${target}" ] && [ ! -L "${RELEASES}/${target}" ] || fail "no release ${target} on the server"
+  with_lock
+  live="$(live_release || true)"
+  [ "$target" = "$live" ] && { say "${target} is already live"; return 0; }
+  log "switch ${live:-none} -> ${target}"
+  switch_to "$target" "$live"
+}
+
+# --- main --------------------------------------------------------------------
+
+command="${1:-help}"
+shift || true
+
+case "$command" in
+  help|-h|--help) usage ;;
+  status)   need_root status;   cmd_status ;;
+  releases) need_root releases; cmd_releases ;;
+  logs)     need_root logs;     cmd_logs "${1:-}" ;;
+  restart)  need_root restart;  cmd_restart ;;
+  deploy)   need_root deploy;   cmd_deploy "${1:-}" ;;
+  rollback) need_root rollback; cmd_rollback ;;
+  switch)   need_root switch;   cmd_switch "${1:-}" ;;
+  *) usage >&2; exit 2 ;;
+esac

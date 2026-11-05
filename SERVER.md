@@ -38,12 +38,15 @@ No secrets are written here: values live only on the server.
 |---|---|---|
 | `root` | Admin and deploys | Key `~/.ssh/grademaster_vps` on Chris's Mac |
 | `goblins` | Runs the site service. Home is `/srv/goblinslair` | No (`nologin`) |
-| `goblinstarv` | The shop owner (Chris's friend). Added 2026-11-04 | Yes, his own key (`goblinslair-2026-11-04`). No sudo, no access to `shared/.env` |
+| `goblinstarv` | The shop owner (Chris's friend). Added 2026-11-04 | Yes, his own key (`goblinslair-2026-11-04`). Sudo for `goblinslair-ctl` only. Cannot read `shared/.env` directly |
 | `grademaster`, `ubuntu` | GradeMaster / DO default | Not ours |
 
-`goblinstarv` cannot deploy or read secrets. Give it more access only if
-Chris asks. The plan is one copy of the site, deployed with `deploy.sh`, not
-a second copy run by someone else.
+`goblinstarv` deploys and manages the site through the levers in
+`deployment/` (see "Deploying" below), not through general sudo. Add new
+abilities as new `goblinslair-ctl` commands, not wider access. There is one
+copy of the site, deployed with `deploy.sh`, not a second copy run by
+someone else. Code he deploys runs as `goblins`, so it can read
+`shared/.env`. That is accepted.
 
 ## How a request reaches the site
 
@@ -107,30 +110,50 @@ there). Existing backups are in `/root/*.bak-20261104`.
 
 ## Deploying
 
-Run from Chris's Mac, on `krispy`, with a clean working tree:
+Run on `krispy`, with a clean working tree that is not behind
+`origin/krispy`:
 
 ```bash
+# Chris (as root)
 GOBLINS_SITE_URL=https://goblinslair.com.my ./deploy.sh
+# The shop owner (as goblinstarv)
+GOBLINS_USER=goblinstarv GOBLINS_SITE_URL=https://goblinslair.com.my ./deploy.sh
 ```
 
 The script:
 
 1. Builds locally with `DEPLOY_TARGET=node` (Node adapter, output in `dist/`).
-2. Uploads to `/srv/goblinslair/releases/<time>-<sha>/` with rsync as root.
-3. Runs `npm ci --omit=dev` on the droplet (so `sharp` gets its Linux binary).
-4. Points `/srv/goblinslair/current` at the new release and restarts the
-   service.
-5. If the home page does not return 200, it switches back to the previous
-   release. It keeps the last 3 releases.
+2. Uploads to `/srv/goblinslair/deployment/<time>-<sha>/` with rsync.
+3. Runs `goblinslair-ctl deploy <release>` on the droplet (with `sudo -n`
+   for non-root users). That script moves the upload into `releases/`, runs
+   `npm ci --omit=dev` as `goblins` (so `sharp` gets its Linux binary),
+   points `current` at it, restarts the service and checks the home page.
+4. If the home page does not return 200, it switches back to the previous
+   release and deletes the failed one. It keeps the newest 3 releases, never
+   deletes the live one, and deletes uploads that were never deployed after 24
+   hours. A lock stops two deploys from running at once.
+
+Release names use **UTC** time, and `deploy` refuses any other. Rollback
+picks releases by name order, so a local-time name once made it roll back to
+the wrong release.
+
+The levers (`status`, `releases`, `logs`, `restart`, `deploy`, `rollback`,
+`switch`)
+live in `deployment/goblinslair-ctl`, installed at
+`/usr/local/sbin/goblinslair-ctl`. The only sudo rule is
+`/etc/sudoers.d/goblinslair`. `deployment/install.sh` (run as root from the
+Mac) installs or updates both, makes `releases/` root-owned and creates the
+upload folder. Every lever use is logged to `/var/log/goblinslair-ctl.log`.
+See `deployment/README.md` for the shop owner's guide.
 
 `SITE_URL` is **baked in at build time**. It sets the canonical links,
 sitemap, social tags, FIUU return/webhook URLs and `security.allowedDomains`.
 Changing the domain means rebuilding, not just editing `.env`.
 
-Manual rollback: point `current` at an older folder in `releases/`, then
-`systemctl restart goblinslair`.
+Rollback: `sudo goblinslair-ctl rollback` (moves to the release before the
+live one).
 
-**Live now:** release `20261104165905-752c208` (krispy HEAD on 2026-11-04).
+**Live now:** release `20261104161711-752c208` (krispy `752c208`, deployed 2026-11-04 through the levers).
 
 ## Known issues and open items (2026-11-04)
 

@@ -1,0 +1,6 @@
+# /etc/sudoers.d/goblinslair (root:root, mode 440), installed by
+# deployment/install.sh, which checks it with `visudo -cf` first.
+#
+# Lets the shop owner's login run goblinslair-ctl as root, and nothing else.
+# The script checks its own arguments, so no argument list is pinned here.
+goblinstarv ALL=(root) NOPASSWD: /usr/local/sbin/goblinslair-ctl
