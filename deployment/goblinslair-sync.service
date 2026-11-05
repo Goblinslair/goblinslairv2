@@ -1,0 +1,16 @@
+[Unit]
+Description=Goblin's Lair hourly product sync (Loyverse to database)
+After=goblinslair.service
+Wants=goblinslair.service
+
+[Service]
+Type=oneshot
+User=goblins
+Group=goblins
+# SYNC_SECRET comes from the same .env file the site reads.
+EnvironmentFile=/srv/goblinslair/shared/.env
+TimeoutStartSec=300
+# The secret goes to curl on stdin, not as an argument, so it never shows in
+# the process list. The Host header matches what the site expects (the same
+# thing goblinslair-ctl's health check does).
+ExecStart=/bin/sh -c 'printf "header = \\"Authorization: Bearer %%s\\"\n" "$SYNC_SECRET" | /usr/bin/curl -sS --fail-with-body -m 240 -X POST -H "Host: goblinslair.com.my" -K - http://127.0.0.1:4321/api/admin/sync-products'
