@@ -1,9 +1,14 @@
 # Deploying Goblin's Lair (for the shop owner and his AI agent)
 
 The site runs on a DigitalOcean droplet that is shared with another project
-(GradeMaster). You manage the site through **one command**,
-`goblinslair-ctl`, which you run with `sudo`. That is the only thing sudo
-allows for your login, and it only touches the Goblin's Lair site.
+(GradeMaster, Chris's demo). Your login has **full passwordless sudo**, so you
+can manage the server yourself. For the site itself, still use
+`goblinslair-ctl` and `deploy.sh` below, so release names, rollback and the
+action log stay consistent.
+
+**Please don't lock Chris out:** leave root's SSH access
+(`/root/.ssh/authorized_keys`, `PermitRootLogin`), `sshd_config` and the
+firewall's SSH rule alone.
 
 - **Server:** `159.65.171.134`
 - **Your login:** `goblinstarv` (your own SSH key)
@@ -53,17 +58,17 @@ The newest 3 releases are kept. The live one is never deleted. Uploads that
 never get deployed are deleted after 24 hours. Every command is logged to
 `/var/log/goblinslair-ctl.log`.
 
-## Not available (ask Chris)
+## Everything else
 
-nginx, domains, certificates, the firewall, other users and services, and
-the secrets in `/srv/goblinslair/shared/.env`. If you need a new lever (for
-example "sync products now" or changing one `.env` value), ask for it to be
-added to `goblinslair-ctl`, not for wider access.
+With full sudo you can change nginx, certificates, `shared/.env` and so on
+yourself. `../SERVER.md` describes how it's all set up today. Please keep
+it up to date when you change something, so the next person (or agent)
+knows.
 
 ## Files here
 
 - `goblinslair-ctl`: the lever script, installed as `/usr/local/sbin/goblinslair-ctl`.
-- `sudoers-goblinslair`: the one sudo rule, installed as `/etc/sudoers.d/goblinslair`.
+- `sudoers-goblinslair`: the narrow sudo rule for just the levers, installed as `/etc/sudoers.d/goblinslair`. Full sudo is a separate file, `/etc/sudoers.d/goblinstarv-full`, not in the repo.
 - `install.sh`: installs both (run by Chris, as root). Re-run it after changing either file.
 
 More about the server as a whole: `../SERVER.md`.

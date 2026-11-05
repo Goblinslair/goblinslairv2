@@ -14,9 +14,13 @@ No secrets are written here: values live only on the server.
 - **Ask before every server change.** That includes SSH, nginx, firewall,
   users, keys, certificates, `.env` edits and deploys. Confirm right before
   running it, even if it was agreed earlier. Read-only checks are fine.
-- **The droplet is shared with GradeMaster** (a separate project with its own
-  services and nginx site). Only touch `/srv/goblinslair`, the `goblinslair`
-  service and the `goblinslair*` nginx sites unless asked.
+  (This is Chris's rule. The shop owner sets his own for his agent.)
+- **Never lock out root.** Do not change root's SSH access
+  (`/root/.ssh/authorized_keys`, `PermitRootLogin`), `sshd_config` or the
+  firewall's SSH rule. Chris logs in as root with his own key.
+- **The droplet is shared with GradeMaster** (Chris's demo project, with its
+  own services and nginx site). Chris has said it can be rebuilt if it
+  breaks, but avoid touching it without a reason.
 - **Never type or print secrets** (the admin password, `.env` values, private
   keys). Move key files with `scp` without opening them.
 - **Keep `krispy` off `main`** until the full cutover. Vercel (on `main`)
@@ -38,15 +42,15 @@ No secrets are written here: values live only on the server.
 |---|---|---|
 | `root` | Admin and deploys | Key `~/.ssh/grademaster_vps` on Chris's Mac |
 | `goblins` | Runs the site service. Home is `/srv/goblinslair` | No (`nologin`) |
-| `goblinstarv` | The shop owner (Chris's friend). Added 2026-11-04 | Yes, his own key (`goblinslair-2026-11-04`). Sudo for `goblinslair-ctl` only. Cannot read `shared/.env` directly |
+| `goblinstarv` | The shop owner (Chris's friend). Added 2026-11-04 | Yes, his own key (`goblinslair-2026-11-04`). **Full passwordless sudo** since 2026-11-05 (`/etc/sudoers.d/goblinstarv-full`) |
 | `grademaster`, `ubuntu` | GradeMaster / DO default | Not ours |
 
-`goblinstarv` deploys and manages the site through the levers in
-`deployment/` (see "Deploying" below), not through general sudo. Add new
-abilities as new `goblinslair-ctl` commands, not wider access. There is one
-copy of the site, deployed with `deploy.sh`, not a second copy run by
-someone else. Code he deploys runs as `goblins`, so it can read
-`shared/.env`. That is accepted.
+`goblinstarv` (and his AI agent) has full root through sudo, so he can
+manage the server himself. Even so, deploy through `deploy.sh` /
+`goblinslair-ctl` (see "Deploying" below), so release names, rollback and the
+action log stay consistent. There is one copy of the site, not a second copy
+run by someone else. The narrower lever rule (`/etc/sudoers.d/goblinslair`)
+is still in place, and is what to keep if full sudo is ever taken away again.
 
 ## How a request reaches the site
 
@@ -140,8 +144,8 @@ the wrong release.
 The levers (`status`, `releases`, `logs`, `restart`, `deploy`, `rollback`,
 `switch`)
 live in `deployment/goblinslair-ctl`, installed at
-`/usr/local/sbin/goblinslair-ctl`. The only sudo rule is
-`/etc/sudoers.d/goblinslair`. `deployment/install.sh` (run as root from the
+`/usr/local/sbin/goblinslair-ctl`. Its narrow sudo rule is
+`/etc/sudoers.d/goblinslair` (`goblinstarv` also has full sudo, see Users). `deployment/install.sh` (run as root from the
 Mac) installs or updates both, makes `releases/` root-owned and creates the
 upload folder. Every lever use is logged to `/var/log/goblinslair-ctl.log`.
 See `deployment/README.md` for the shop owner's guide.
