@@ -6,10 +6,7 @@
   var submitBtn = form.querySelector('button[type="submit"]');
   var submitLabel = submitBtn.textContent;
 
-  // No backend wired up yet — swap this for a real endpoint (Formspree,
-  // a Vercel function, etc.) when one is chosen. Until then this always
-  // fails and falls into the catch below, which still stops the old
-  // silent-GET-reload behavior and points people at a working fallback.
+  // Handled by src/pages/api/contact.ts, which emails the shop through Brevo.
   var CONTACT_ENDPOINT = '/api/contact';
 
   function showStatus(kind, text) {
@@ -25,6 +22,7 @@
     var email = form.querySelector('#email');
     var topic = form.querySelector('#topic');
     var message = form.querySelector('#message');
+    var website = form.querySelector('#website');
 
     if (!name.value.trim() || !email.value.trim() || !message.value.trim()) {
       showStatus('error', 'Please fill in your name, email, and message.');
@@ -41,13 +39,21 @@
         name: name.value.trim(),
         email: email.value.trim(),
         topic: topic ? topic.value : '',
-        message: message.value.trim()
+        message: message.value.trim(),
+        website: website ? website.value : ''
       })
     })
       .then(function (res) {
-        if (!res.ok) throw new Error('Contact form endpoint returned ' + res.status);
-        showStatus('success', "Message sent — we'll get back to you soon.");
-        form.reset();
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (res.ok) {
+            showStatus('success', "Message sent — we'll get back to you soon.");
+            form.reset();
+          } else if (res.status === 400 || res.status === 429) {
+            showStatus('error', data.error || 'Please check the form and try again.');
+          } else {
+            throw new Error('Contact form endpoint returned ' + res.status);
+          }
+        });
       })
       .catch(function () {
         showStatus('error', 'Something went wrong sending that. Please email us directly at goblinslairpj@gmail.com instead.');

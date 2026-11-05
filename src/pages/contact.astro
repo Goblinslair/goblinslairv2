@@ -33,6 +33,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <label for="message">Message</label>
           <textarea id="message" placeholder="What can we find for you?"></textarea>
         </div>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
         <button type="submit" class="btn btn-primary" style="justify-self:start;">Send Message</button>
         <p class="form-status" role="status" aria-live="polite"></p>
       </form>
