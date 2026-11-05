@@ -97,9 +97,18 @@ DEPLOY_TARGET=node SITE_URL="$SITE_URL" npm run build
 # --- upload and switch over --------------------------------------------------
 
 say "Uploading release ${release} as ${USER_ON_SERVER}"
-rsync -az -e "ssh ${SSH_OPTS[*]}" \
-  dist package.json package-lock.json \
-  "${USER_ON_SERVER}@${HOST}:${UPLOADS}/${release}/"
+if command -v rsync >/dev/null 2>&1; then
+  rsync -az -e "ssh ${SSH_OPTS[*]}" \
+    dist package.json package-lock.json \
+    "${USER_ON_SERVER}@${HOST}:${UPLOADS}/${release}/"
+else
+  # No rsync (e.g. Git Bash on Windows): send the same files as a tar stream.
+  # COPYFILE_DISABLE stops macOS tar from adding ._ metadata files.
+  echo "(rsync not found; uploading with tar over ssh.)"
+  COPYFILE_DISABLE=1 tar -czf - dist package.json package-lock.json \
+    | ssh "${SSH_OPTS[@]}" "${USER_ON_SERVER}@${HOST}" \
+        "mkdir -p '${UPLOADS}/${release}' && tar -xzf - -C '${UPLOADS}/${release}'"
+fi
 
 say "Putting ${release} live on ${HOST}"
 ssh "${SSH_OPTS[@]}" "${USER_ON_SERVER}@${HOST}" ${SUDO} "${CTL}" deploy "${release}"
