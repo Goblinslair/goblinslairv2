@@ -140,11 +140,13 @@ async function fetchGwPaintAssets() {
   return assets;
 }
 
-async function fetchGwPage(page) {
+async function fetchGwPage(page, filtered = true) {
   const url = new URL(GW_MEDIA_ENDPOINT);
   url.searchParams.set('fe', '1');
-  url.searchParams.set('group', GW_GROUP_IMAGES_AND_LOGOS);
-  url.searchParams.set('brand', GW_BRAND_CITADEL);
+  if (filtered) {
+    url.searchParams.set('group', GW_GROUP_IMAGES_AND_LOGOS);
+    url.searchParams.set('brand', GW_BRAND_CITADEL);
+  }
   url.searchParams.set('order', 'desc');
   url.searchParams.set('per_page', '100');
   url.searchParams.set('page', String(page));
@@ -252,6 +254,52 @@ function findMatch(key, { exact, pack }) {
   return { tier: null, reason: 'no match found' };
 }
 
+// --- Exact match by product code ---------------------------------------------
+// Newer ranges (e.g. Warhammer Tone Pro, 1-5 shades of the same colour) sit
+// outside the Citadel brand filter above, and their names differ only by a
+// number that normalizeName() strips - so name matching can't tell them
+// apart. GW's asset titles do carry the product code though
+// ("T150-20-121-99189961266-TN_ BLACKSTONE VOID 1 12ML ROW"), and it is
+// the first 11 digits of the Loyverse SKU ("9918996126606"). An 11-digit
+// code is unique per colour/shade, so this is an exact match, tried before
+// the name tiers. Needs the whole (unfiltered) library, fetched only when
+// there is something to look up.
+async function fetchAllGwAssets() {
+  const assets = [];
+  for (let page = 1; ; page += 1) {
+    const url = new URL(GW_MEDIA_ENDPOINT);
+    for (const [k, v] of Object.entries({ fe: 1, order: 'desc', per_page: 100, page, lang: 'en', country: 220 })) {
+      url.searchParams.set(k, String(v));
+    }
+    const res = await fetch(url, { credentials: 'omit' });
+    if (!res.ok) throw new Error(`GW media API failed on page ${page}: ${res.status}`);
+    const batch = (await res.json()).assets || [];
+    if (batch.length === 0) break;
+    assets.push(...batch);
+  }
+  return assets;
+}
+
+function gwProductCode(asset) {
+  const m = classificationText(asset).match(/(?<!\d)(\d{11})(?!\d)/);
+  return m ? m[1] : null;
+}
+
+// code -> assets, single-unit paint pots only (a stated volume, not a pack).
+function buildCodeIndex(assets) {
+  const index = new Map();
+  for (const asset of assets) {
+    if (!/\.(jpe?g|png)$/i.test(asset.file_name || asset.file_url || '')) continue;
+    const text = classificationText(asset);
+    if (!VOLUME_PATTERN.test(text) || PACK_PATTERN.test(text)) continue;
+    const code = gwProductCode(asset);
+    if (!code) continue;
+    if (!index.has(code)) index.set(code, []);
+    index.get(code).push(asset);
+  }
+  return index;
+}
+
 // --- Local fallback-tracking state -------------------------------------------
 // Loyverse's item object has no field to record "this image is provisional" -
 // image_url is just a URL, no metadata about where it came from. So that
@@ -324,10 +372,27 @@ async function main() {
   const matched = []; // { item, asset, tier, isUpgrade }
   const skipped = [];
 
+  // Product-code matching first (see buildCodeIndex). The full library is
+  // only fetched if some paint has a SKU the Citadel-only index missed.
+  let codeIndex = null;
+  async function findByCode(item) {
+    const sku = item.variants?.[0]?.sku;
+    if (!sku || !/^\d{11,}/.test(sku)) return null;
+    if (!codeIndex) {
+      console.log('Fetching full GW library for product-code matching...');
+      codeIndex = buildCodeIndex(await fetchAllGwAssets());
+    }
+    const candidates = codeIndex.get(sku.slice(0, 11)) || [];
+    return candidates.length === 1 ? candidates[0] : null;
+  }
+
   for (const item of unimaged) {
     const key = normalizeName(item.item_name);
     const result = findMatch(key, gwIndexes);
-    if (result.tier) {
+    const codeAsset = result.tier ? null : await findByCode(item);
+    if (codeAsset) {
+      matched.push({ item, asset: codeAsset, tier: 'exact', isUpgrade: false });
+    } else if (result.tier) {
       matched.push({ item, asset: result.asset, tier: result.tier, isUpgrade: false });
     } else {
       skipped.push({ item, reason: result.reason, normalizedName: key, candidateTitles: result.candidateTitles });
