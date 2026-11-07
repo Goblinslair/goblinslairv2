@@ -21,9 +21,11 @@ const EXCLUDED_CATEGORIES = new Set(
     'Food and Drinks',
     'Gaming Tools',
     // Hidden for now, to be added back when there is more range (remove the
-    // two lines below and sync again to bring them back).
+    // four lines below and sync again to bring them back).
     'Black Library',
     'White Dwarf',
+    'Starter Products',
+    'Hobby Heresy',
     'Membership',
     'Painting & Modelling Tools',
     'Payments & Services',
