@@ -8,7 +8,7 @@ const token = Astro.cookies.get(ADMIN_SESSION_COOKIE)?.value;
 const isAdmin = token ? await isValidAdminSession(token) : false;
 if (!isAdmin) return Astro.redirect('/admin/login');
 ---
-<BaseLayout title="New Event — Goblin's Lair">
+<BaseLayout title="New Event — Goblin's Lair" noindex>
   <div class="page-header">
     <div class="hero-eyebrow">Staff Only</div>
     <h1>New Event</h1>

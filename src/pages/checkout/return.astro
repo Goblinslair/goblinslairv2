@@ -37,7 +37,7 @@ const rows = orderId
 const status = rows[0]?.status ?? null;
 const isDelivery = rows[0]?.fulfillment_method === 'delivery';
 ---
-<BaseLayout title="Order Status — Goblin's Lair">
+<BaseLayout title="Order Status — Goblin's Lair" noindex>
   <div class="page-header">
     <div class="hero-eyebrow">Click &amp; Collect</div>
     <h1>Order Status</h1>

@@ -14,7 +14,7 @@ const token = Astro.cookies.get(SESSION_COOKIE)?.value;
 const customer = token ? await getSessionCustomer(token) : null;
 const tier = customer ? await getMembershipTier(customer.email) : { level: null, discountPercent: 0, phoneNumber: null };
 ---
-<BaseLayout title="Your Cart — Goblin's Lair">
+<BaseLayout title="Your Cart — Goblin's Lair" noindex>
 
   <div class="page-header">
     <div class="hero-eyebrow">Your Haul</div>
