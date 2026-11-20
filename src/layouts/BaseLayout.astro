@@ -8,11 +8,16 @@ interface Props {
   description?: string;
   image?: string;
   jsonLd?: object | object[]; // additional page-specific schema.org blocks, beyond the site-wide LocalBusiness one below
+  noindex?: boolean; // keep private/utility pages (login, cart, account, admin) out of search results
 }
-const { title, description = "Warhammer 40,000 and Age of Sigmar miniatures, paints, and hobby supplies.", image, jsonLd } = Astro.props;
+const { title, description = "Warhammer 40,000 and Age of Sigmar miniatures, paints, and hobby supplies.", image, jsonLd, noindex = false } = Astro.props;
 const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 const path = Astro.url.pathname;
-const canonicalURL = new URL(path, Astro.site);
+// One form per page: prerendered pages arrive as /about/ and server-rendered
+// ones as /about, but the sitemap and links use no trailing slash.
+const canonicalURL = new URL(path.length > 1 ? path.replace(/\/+$/, '') : path, Astro.site);
+// Pages without their own picture share the logo card when a link is shared.
+const shareImage = image ?? new URL('/og-default.png', Astro.site).href;
 
 function isActive(href: string) {
   if (href === '/') return path === '/';
@@ -27,6 +32,10 @@ const localBusiness = {
   name: "Goblin's Lair",
   email: 'goblinslairpj@gmail.com',
   url: Astro.site?.href,
+  image: new URL('/og-default.png', Astro.site).href,
+  logo: new URL('/apple-touch-icon.png', Astro.site).href,
+  hasMap: 'https://maps.app.goo.gl/ps52aJBpJMBxz3GS7',
+  geo: { '@type': 'GeoCoordinates', latitude: 3.1132372, longitude: 101.6114818 },
   address: {
     '@type': 'PostalAddress',
     streetAddress: '84A, Jalan SS 24/2, Taman Megah',
@@ -48,17 +57,21 @@ const localBusiness = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
   <meta name="description" content={description} />
+  {noindex && <meta name="robots" content="noindex, nofollow" />}
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="canonical" href={canonicalURL} />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Goblin's Lair" />
   <meta property="og:url" content={canonicalURL} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  {image && <meta property="og:image" content={image} />}
-  <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+  <meta property="og:image" content={shareImage} />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
-  {image && <meta name="twitter:image" content={image} />}
+  <meta name="twitter:image" content={shareImage} />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
