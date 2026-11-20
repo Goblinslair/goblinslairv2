@@ -39,14 +39,38 @@ const stockLabel = stock === null || stock === undefined ? null : stock <= 0 ? '
 const descriptionHtml = description ? sanitizeHtml(description) : '';
 const descriptionText = description ? stripHtml(description) : '';
 
+// Loyverse names arrive in capitals ("ADEPTA SORORITAS: RETRIBUTOR SQUAD").
+// Title-case them for the browser tab / search result / share card only;
+// the on-page heading keeps the shop's own spelling. Tokens with digits
+// (40K, 11TH) and short bracketed tags ((ENG), (PB)) stay as written.
+function seoTitleCase(value: string): string {
+  return value
+    .split(' ')
+    .map((word) => {
+      if (/\d/.test(word) || /^\(.{1,4}\)$/.test(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
+// Search results show about 155 characters, so a long product blurb gets cut
+// at a word boundary for the meta description (the full text stays on the
+// page and in the Product structured data).
+function shortDescription(value: string, max = 155): string {
+  if (value.length <= max) return value;
+  const cut = value.slice(0, max - 1);
+  return cut.slice(0, cut.lastIndexOf(' ')).replace(/[\s,.;:–-]+$/, '') + '…';
+}
+
 // Lets Google show price/stock directly in search results. Built from
 // data already on this page — no extra fetching. Works fine even before
 // SITE_URL is set for real: Astro.site just carries the placeholder
 // domain until then, same as the canonical tag above already does.
+const seoName = name ? seoTitleCase(name) : name;
 const productJsonLd = product ? {
   '@context': 'https://schema.org',
   '@type': 'Product',
-  name,
+  name: seoName,
   description: descriptionText || undefined,
   image: image || undefined,
   sku: sku || undefined,
@@ -63,8 +87,8 @@ const productJsonLd = product ? {
 } : null;
 ---
 <BaseLayout
-  title={product ? `${name} — Goblin's Lair` : "Product Not Found — Goblin's Lair"}
-  description={product ? (descriptionText || undefined) : undefined}
+  title={product ? `${seoName} — Goblin's Lair` : "Product Not Found — Goblin's Lair"}
+  description={product ? (descriptionText ? shortDescription(descriptionText) : undefined) : undefined}
   image={image || undefined}
   jsonLd={productJsonLd || undefined}
 >
